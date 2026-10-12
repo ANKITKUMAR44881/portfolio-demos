@@ -1,0 +1,1894 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Purchase Request Portal — Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f0ede8;
+  --surface: #faf9f7;
+  --white: #ffffff;
+  --ink: #1a1916;
+  --ink2: #3d3c39;
+  --ink3: #7a7870;
+  --rule: #d8d4cc;
+  --rule2: #e8e5e0;
+  --accent: #c13515;
+  --accent2: #1a4d8f;
+  --cust: #6b2fa0;
+  --internal: #c13515;
+  --green: #1a6b3a;
+  --capex: #1a6b52;
+  --amber: #b06800;
+  --err: #d32f2f;
+  --err-bg: #fff5f5;
+  --mono: 'DM Mono', monospace;
+  --sans: 'Syne', sans-serif;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-lg: 0 10px 28px rgba(0,0,0,0.14), 0 4px 10px rgba(0,0,0,0.08);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--bg); color: var(--ink); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+/* ── DEMO BANNER / FOOTER ── */
+.demo-banner { background: var(--accent2); color: #fff; font-family: var(--mono); font-size: 11px; letter-spacing: .04em; text-align: center; padding: 8px 16px; }
+.demo-footer { font-family: var(--mono); font-size: 10px; color: var(--ink3); text-align: center; line-height: 1.7; padding: 28px 16px 8px; }
+@media print { .demo-banner { display: none; } }
+
+/* ── DRAFT BANNER ── */
+.draft-banner { display: none; background: #fff8e1; border-bottom: 2px solid var(--amber); padding: 10px 48px; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.draft-banner.show { display: flex; }
+.draft-banner-text { font-family: var(--mono); font-size: 11px; color: var(--amber); display: flex; align-items: center; gap: 8px; }
+.draft-banner-text strong { color: var(--ink2); }
+.draft-actions { display: flex; gap: 8px; }
+.dbtn { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; border: none; padding: 5px 12px; cursor: pointer; border-radius: 2px; transition: all .15s; }
+.dbtn-restore { background: var(--amber); color: #fff; }
+.dbtn-restore:hover { background: #8a5000; }
+.dbtn-dismiss { background: transparent; color: var(--ink3); border: 1px solid var(--rule); }
+.dbtn-dismiss:hover { color: var(--ink2); border-color: var(--ink2); }
+
+/* ── HEADER ── */
+.hdr { background: var(--ink); padding: 0 48px; display: grid; grid-template-columns: auto 1fr auto; align-items: stretch; border-bottom: 3px solid var(--accent); min-height: 72px; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); }
+.hdr-brand { display: flex; align-items: center; gap: 14px; padding: 16px 24px 16px 0; border-right: 1px solid #2e2e2b; }
+.logo { display: flex; align-items: center; flex-shrink: 0; }
+.brand-name { font-size: 15px; font-weight: 600; color: #fff; letter-spacing: -.01em; }
+.brand-sub { font-family: var(--mono); font-size: 9px; color: #666; letter-spacing: .12em; text-transform: uppercase; margin-top: 2px; }
+.hdr-title { display: flex; align-items: center; padding-left: 28px; }
+.hdr-title h1 { font-size: 13px; font-weight: 600; color: #fff; letter-spacing: .04em; text-transform: uppercase; }
+.hdr-meta { display: flex; flex-direction: column; justify-content: center; align-items: flex-end; gap: 4px; padding: 16px 0; }
+.ref-num { font-family: var(--mono); font-size: 11px; color: #aaa; }
+.recipient-tag { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; background: var(--accent); color: #fff; padding: 3px 8px; border-radius: 2px; }
+.draft-ind { font-family: var(--mono); font-size: 9px; color: #555; letter-spacing: .06em; display: none; align-items: center; gap: 5px; }
+.draft-ind.show { display: flex; }
+.draft-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
+
+/* ── LAYOUT ── */
+.body { max-width: 920px; margin: 0 auto; padding: 28px 20px 100px; }
+
+/* ── CARD ── */
+.card { background: var(--white); border: 1px solid var(--rule); margin-bottom: 3px; overflow: hidden; }
+.card-head { background: var(--ink); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; }
+.card-head-title { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #bbb; }
+.card-head-num { font-family: var(--mono); font-size: 10px; color: #555; }
+.card-body { padding: 20px; }
+
+/* ── FIELDS ── */
+.fg { display: grid; gap: 14px 20px; }
+.fg-1 { grid-template-columns: 1fr; }
+.fg-2 { grid-template-columns: 1fr 1fr; }
+.fg-3 { grid-template-columns: 1fr 1fr 1fr; }
+.fg-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-family: var(--mono); font-size: 9px; letter-spacing: .13em; text-transform: uppercase; color: var(--ink3); display: flex; align-items: center; gap: 5px; }
+.req { color: var(--accent); }
+.field input, .field select, .field textarea {
+  border: 1.5px solid var(--rule); background: var(--surface); padding: 9px 12px;
+  font-family: var(--sans); font-size: 13px; color: var(--ink); outline: none;
+  border-radius: 3px; transition: border-color .15s, background .15s, box-shadow .15s;
+  width: 100%; -webkit-appearance: none; appearance: none;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent2); background: #fff; box-shadow: 0 0 0 3px rgba(26,77,143,.09); }
+.field input.prefilled { background: #f5f3ef; font-weight: 500; color: var(--ink2); }
+.field textarea { resize: vertical; min-height: 72px; line-height: 1.6; }
+.field select { background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7870' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
+.field input.invalid, .field select.invalid, .field textarea.invalid { border-color: var(--err) !important; background: var(--err-bg); box-shadow: 0 0 0 3px rgba(211,47,47,.08); }
+.ferr { font-family: var(--mono); font-size: 9px; color: var(--err); letter-spacing: .05em; display: none; margin-top: 2px; }
+.ferr.show { display: block; }
+
+/* ── COST TOGGLE ── */
+.cost-toggle { display: grid; grid-template-columns: 1fr 1fr 1fr; border: 1.5px solid var(--rule); border-radius: 3px; overflow: hidden; }
+.cost-toggle.invalid { border-color: var(--err); box-shadow: 0 0 0 3px rgba(211,47,47,.08); }
+.cost-opt { position: relative; cursor: pointer; }
+.cost-opt input { position: absolute; opacity: 0; }
+.cost-opt-inner { padding: 14px 18px; text-align: center; transition: background .18s; border-right: 1px solid var(--rule); }
+.cost-opt:last-child .cost-opt-inner { border-right: none; }
+.cost-opt-tag { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; display: block; margin-bottom: 3px; }
+.cost-opt-name { font-size: 14px; font-weight: 700; }
+.cost-opt-desc { font-family: var(--mono); font-size: 9px; color: var(--ink3); margin-top: 4px; display: block; line-height: 1.5; }
+.cost-opt.sel-cust .cost-opt-inner { background: var(--cust); }
+.cost-opt.sel-cust .cost-opt-tag, .cost-opt.sel-cust .cost-opt-name, .cost-opt.sel-cust .cost-opt-desc { color: #fff; }
+.cost-opt.sel-internal .cost-opt-inner { background: var(--internal); }
+.cost-opt.sel-internal .cost-opt-tag, .cost-opt.sel-internal .cost-opt-name, .cost-opt.sel-internal .cost-opt-desc { color: #fff; }
+/* generic selected state — background colour is set inline from ACCOUNTS config */
+.cost-opt.sel-on .cost-opt-tag, .cost-opt.sel-on .cost-opt-name, .cost-opt.sel-on .cost-opt-desc { color: #fff; }
+.cost-toggle.cols-2 { grid-template-columns: 1fr 1fr; }
+.cost-toggle.cols-1 { grid-template-columns: 1fr; }
+
+/* ── ACCOUNT GATE ── */
+.acct-gate { background: var(--surface); border: 1.5px solid var(--rule); border-radius: 4px; padding: 20px 24px; margin-bottom: 22px; }
+.acct-gate.invalid { border-color: var(--err); box-shadow: 0 0 0 3px rgba(211,47,47,.08); }
+.acct-gate-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.acct-gate-title { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); font-weight: 500; }
+.acct-gate-hint { font-family: var(--mono); font-size: 10px; color: var(--ink3); }
+.acct-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.acct-opt { position: relative; cursor: pointer; border: 1.5px solid var(--rule); border-radius: 3px; background: #fff; padding: 16px 18px 16px 20px; transition: border-color .15s, box-shadow .15s, background .15s; overflow: hidden; }
+.acct-opt::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--acct-c, var(--rule)); transition: width .15s; }
+.acct-opt:hover { border-color: var(--acct-c, var(--ink3)); }
+.acct-opt.sel { border-color: var(--acct-c); background: var(--acct-bg, #fff); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.acct-opt.sel::before { width: 6px; }
+.acct-opt input { position: absolute; opacity: 0; pointer-events: none; }
+.acct-opt-tag { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--acct-c); display: block; margin-bottom: 4px; }
+.acct-opt-name { font-size: 17px; font-weight: 700; color: var(--ink); line-height: 1.2; }
+.acct-opt-desc { font-family: var(--mono); font-size: 9.5px; color: var(--ink3); margin-top: 6px; display: block; line-height: 1.55; }
+.acct-opt.sel .acct-opt-desc { color: var(--ink2); }
+.acct-ctx { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--rule); font-family: var(--mono); font-size: 10px; color: var(--ink3); line-height: 1.7; }
+.acct-ctx.show { display: block; }
+.acct-ctx strong { color: var(--ink2); font-weight: 500; }
+
+/* ── CAPEX WIZARD ── */
+.wiz { border: 1.5px solid var(--rule); border-radius: 3px; padding: 0; overflow: hidden; }
+.wiz-q { padding: 14px 16px; border-bottom: 1px solid var(--rule2); }
+.wiz-q:last-of-type { border-bottom: none; }
+.wiz-q-lbl { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; color: var(--ink2); display: block; margin-bottom: 9px; line-height: 1.5; }
+.wiz-opts { display: flex; flex-wrap: wrap; gap: 7px; }
+.wiz-opt { font-family: var(--mono); font-size: 10px; padding: 7px 12px; border: 1px solid var(--rule); border-radius: 2px; background: #fff; cursor: pointer; color: var(--ink2); transition: all .13s; text-align: left; }
+.wiz-opt:hover { border-color: var(--ink3); }
+.wiz-opt.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+.wiz-verdict { padding: 14px 16px; border-top: 1.5px solid var(--rule); font-family: var(--mono); font-size: 10px; line-height: 1.7; display: none; }
+.wiz-verdict.show { display: block; }
+.wiz-verdict.v-expense { background: #fff6f2; color: #8a2a0e; border-top-color: #e8b9a6; }
+.wiz-verdict.v-capex { background: #f0f8f4; color: #0f4c38; border-top-color: #a8d5c2; }
+.wiz-verdict-badge { display: inline-block; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; padding: 3px 9px; border-radius: 2px; color: #fff; margin-bottom: 7px; }
+.wiz-override { background: none; border: none; padding: 0; margin-top: 8px; font-family: var(--mono); font-size: 9.5px; color: var(--ink3); text-decoration: underline; cursor: pointer; }
+.wiz-override:hover { color: var(--ink2); }
+
+.cost-opt.sel-capex .cost-opt-inner { background: var(--capex); }
+.cost-opt.sel-capex .cost-opt-tag, .cost-opt.sel-capex .cost-opt-name, .cost-opt.sel-capex .cost-opt-desc { color: #fff; }
+
+/* ── CAPEX PANEL ── */
+.capex-panel-inner { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; }
+.capex-info-col { flex: 1; min-width: 260px; }
+.capex-intro { font-size: 13px; color: var(--ink2); line-height: 1.7; margin-bottom: 18px; }
+.capex-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
+.capex-step { display: flex; gap: 12px; align-items: flex-start; font-size: 12px; color: var(--ink2); line-height: 1.55; }
+.capex-step-num { font-family: var(--mono); font-size: 9px; background: var(--capex); color: #fff; min-width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.btn-capex-dl { display: inline-flex; align-items: center; gap: 9px; background: var(--capex); color: #fff; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; padding: 12px 22px; border-radius: 3px; text-decoration: none; transition: background .15s; }
+.btn-capex-dl:hover { background: #0f4c38; color: #fff; }
+.capex-note { background: #f0f8f4; border: 1px solid #a8d5c2; border-left: 3px solid var(--capex); padding: 12px 16px; font-family: var(--mono); font-size: 10px; color: var(--capex); line-height: 1.75; margin-top: 16px; border-radius: 0 3px 3px 0; }
+
+/* ── LINE ITEMS ── */
+.line-toolbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.line-hint { font-family: var(--mono); font-size: 10px; color: var(--ink3); line-height: 1.7; }
+.btn-paste { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; background: none; border: 1.5px solid var(--accent2); color: var(--accent2); padding: 6px 14px; cursor: pointer; border-radius: 3px; transition: all .15s; white-space: nowrap; flex-shrink: 0; }
+.btn-paste:hover { background: var(--accent2); color: #fff; }
+.line-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table.lines { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 820px; }
+table.lines thead th { font-family: var(--mono); font-size: 9px; letter-spacing: .11em; text-transform: uppercase; color: var(--ink3); text-align: left; padding: 9px 10px; background: #f5f3ef; border-bottom: 1.5px solid var(--rule); border-right: 1px solid var(--rule2); white-space: nowrap; }
+table.lines thead th:last-child { border-right: none; }
+table.lines tbody tr { transition: background .1s; }
+table.lines tbody tr:hover td { background: #fdfcfa; }
+table.lines tbody td { border-bottom: 1px solid var(--rule2); border-right: 1px solid var(--rule2); padding: 0; vertical-align: middle; }
+table.lines tbody td:last-child { border-right: none; }
+table.lines tbody input, table.lines tbody select { border: none; background: transparent; padding: 9px 10px; font-family: var(--sans); font-size: 12px; color: var(--ink); width: 100%; outline: none; transition: background .12s; }
+table.lines tbody input:focus, table.lines tbody select:focus { background: #fffdf9; box-shadow: inset 0 0 0 1.5px var(--accent2); }
+table.lines tbody input[type=number]::-webkit-inner-spin-button,
+table.lines tbody input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+table.lines tbody input[type=number] { -moz-appearance: textfield; }
+.line-num-cell { font-family: var(--mono); font-size: 10px; color: var(--ink3); text-align: center; padding: 9px 8px !important; user-select: none; }
+.inv-toggle { display: flex; align-items: center; justify-content: center; gap: 3px; padding: 6px 5px; }
+.inv-btn { font-family: var(--mono); font-size: 8px; letter-spacing: .06em; padding: 4px 7px; border: 1px solid var(--rule); background: transparent; cursor: pointer; transition: background .12s, color .12s, border-color .12s; border-radius: 2px; color: var(--ink3); }
+.inv-btn.active-inv { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+.inv-btn.active-noninv { background: var(--amber); color: #fff; border-color: var(--amber); }
+.flag-cell { font-family: var(--mono); font-size: 9px; text-align: center; padding: 6px 6px !important; white-space: nowrap; }
+.flag-over { color: var(--accent); font-weight: 600; }
+.flag-ok { color: var(--green); }
+.del-btn { background: none; border: none; cursor: pointer; color: #ccc; font-size: 16px; padding: 4px 6px; transition: color .15s; }
+.del-btn:hover { color: var(--accent); }
+.dup-btn { background: none; border: none; cursor: pointer; color: #bbb; font-size: 14px; padding: 4px 6px; transition: color .15s; }
+.dup-btn:hover { color: var(--accent2); }
+.add-line-row { display: flex; gap: 12px; align-items: center; margin-top: 12px; }
+.add-line { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; background: var(--accent2); border: none; color: #fff; padding: 10px 22px; cursor: pointer; transition: background .15s; border-radius: 3px; font-weight: 500; }
+.add-line:hover { background: var(--ink); }
+.add-line-hint { font-family: var(--mono); font-size: 9px; color: var(--ink3); }
+.line-count { font-family: var(--mono); font-size: 9px; color: var(--ink3); }
+.totals-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--ink); margin-top: 12px; border-radius: 2px; flex-wrap: wrap; gap: 10px; }
+.total-item { display: flex; align-items: center; gap: 8px; }
+.total-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: #666; }
+.total-val { font-family: var(--mono); font-size: 17px; font-weight: 500; color: #fff; }
+.threshold-pill { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; padding: 4px 10px; border-radius: 2px; display: none; }
+.threshold-pill.show { display: block; }
+.pill-warn { background: var(--accent); color: #fff; }
+.pill-ok { background: var(--green); color: #fff; }
+
+/* ── APPROVAL CHAIN ── */
+.approval-chain { display: flex; flex-direction: column; }
+.ap-row { display: flex; align-items: flex-start; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--rule2); position: relative; }
+.ap-row:last-child { border-bottom: none; }
+.ap-row::before { content: ''; position: absolute; left: 11px; top: 36px; bottom: -1px; width: 1px; background: var(--rule); }
+.ap-row:last-child::before { display: none; }
+.ap-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 7px; font-weight: 500; color: #fff; flex-shrink: 0; letter-spacing: .04em; }
+.d-you { background: var(--accent2); }
+.d-mgr { background: var(--amber); }
+.d-appr { background: var(--cust); }
+.d-dir { background: var(--accent); }
+.d-buyer { background: var(--ink2); }
+.d-ok { background: var(--green); }
+.ap-body { flex: 1; min-width: 0; }
+.ap-role { font-size: 13px; font-weight: 600; }
+.ap-who { font-family: var(--mono); font-size: 10px; color: var(--ink3); margin-top: 2px; }
+.ap-note { font-size: 11px; color: var(--ink3); margin-top: 4px; line-height: 1.55; }
+.ap-badge { display: inline-block; font-family: var(--mono); font-size: 8px; letter-spacing: .1em; text-transform: uppercase; padding: 2px 8px; border-radius: 2px; margin-top: 6px; }
+.b-auto { background: #e8f3ee; color: var(--green); }
+.b-email { background: #fdeae4; color: var(--accent); }
+.b-ticket { background: #f0e8f8; color: var(--cust); }
+
+/* ── SIGNATURES ── */
+.sig-grid { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--rule); overflow: hidden; }
+.sig-cell { padding: 20px 24px; border-right: 1px solid var(--rule); }
+.sig-cell:last-child { border-right: none; }
+.sig-label { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); margin-bottom: 10px; }
+.sig-line { border-bottom: 1.5px solid var(--rule); height: 36px; }
+.sig-sublabel { font-family: var(--mono); font-size: 8px; color: #ccc; margin-top: 5px; text-transform: uppercase; letter-spacing: .1em; }
+
+/* ── FILE UPLOAD ── */
+.file-wrap { display:flex; align-items:center; gap:8px; border:1.5px solid var(--rule); background:var(--surface); border-radius:3px; padding:6px 10px; }
+.file-wrap input[type=file] { display:none; }
+.file-label { font-family:var(--mono); font-size:11px; color:var(--ink3); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.file-label.has-file { color:var(--ink2); font-weight:500; }
+.file-btn { font-family:var(--mono); font-size:9px; letter-spacing:.1em; text-transform:uppercase; background:var(--ink); color:#fff; border:none; padding:5px 12px; border-radius:2px; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+.file-btn:hover { background:var(--ink2); }
+.file-clear { background:transparent; border:1px solid var(--rule); color:var(--ink3); font-size:11px; padding:4px 8px; border-radius:2px; cursor:pointer; flex-shrink:0; }
+.file-clear:hover { border-color:var(--err); color:var(--err); }
+
+/* ── SUBMIT BAR ── */
+.submit-bar { position: sticky; bottom: 0; display: flex; align-items: center; justify-content: space-between; padding: 13px 20px; background: var(--white); border: 1px solid var(--rule); border-top: 2px solid var(--ink); margin-top: 3px; z-index: 50; box-shadow: 0 -4px 14px rgba(0,0,0,.09); gap: 16px; flex-wrap: wrap; }
+.submit-note { font-size: 11px; color: var(--ink3); line-height: 1.55; flex: 1; min-width: 180px; }
+.submit-note strong { color: var(--ink2); }
+.btn-row { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+.btn-sub { background: var(--ink); color: #fff; border: none; padding: 11px 24px; font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; cursor: pointer; transition: background .15s; border-radius: 3px; white-space: nowrap; }
+.btn-sub:hover { background: var(--accent); }
+.btn-sub:disabled { opacity: .5; cursor: not-allowed; }
+.btn-sec { background: none; color: var(--ink3); border: 1.5px solid var(--rule); padding: 9px 16px; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; transition: all .15s; border-radius: 3px; white-space: nowrap; }
+.btn-sec:hover { border-color: var(--ink2); color: var(--ink2); }
+
+/* ── TOAST ── */
+.toast-wrap { position: fixed; bottom: 76px; right: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 999; pointer-events: none; }
+.toast { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; padding: 10px 16px; border-radius: 4px; box-shadow: var(--shadow-lg); transform: translateX(120%); transition: transform .3s cubic-bezier(.34,1.56,.64,1); display: flex; align-items: center; gap: 8px; max-width: 280px; }
+.toast.show { transform: translateX(0); }
+.t-success { background: var(--green); color: #fff; }
+.t-warn { background: var(--amber); color: #fff; }
+.t-info { background: var(--accent2); color: #fff; }
+
+/* ── MODALS ── */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(26,25,22,.75); z-index: 200; overflow-y: auto; -webkit-overflow-scrolling: touch; backdrop-filter: blur(2px); }
+.overlay.show { display: flex; align-items: flex-start; justify-content: center; padding: 28px 16px 48px; }
+.modal { background: var(--white); width: 100%; max-width: 780px; border: 1px solid var(--rule); overflow: hidden; box-shadow: var(--shadow-lg); animation: mIn .22s ease; }
+@keyframes mIn { from { opacity:0; transform: translateY(-12px) scale(.98); } to { opacity:1; transform: translateY(0) scale(1); } }
+.modal-head { background: var(--ink); padding: 15px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--accent); }
+.modal-head-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #bbb; }
+.modal-close { background: none; border: none; color: #666; font-size: 22px; cursor: pointer; line-height: 1; padding: 0 4px; transition: color .15s; }
+.modal-close:hover { color: #fff; }
+.modal-body { padding: 24px; }
+.modal-foot { padding: 14px 24px; background: #f5f3ef; border-top: 1px solid var(--rule); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.modal-foot-note { font-family: var(--mono); font-size: 9px; color: var(--ink3); line-height: 1.55; }
+.modal-btns { display: flex; gap: 8px; }
+
+/* ── REVIEW ── */
+.rv-section { margin-bottom: 20px; }
+.rv-title { font-family: var(--mono); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink3); border-bottom: 1px solid var(--rule2); padding-bottom: 6px; margin-bottom: 12px; }
+.rv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; }
+.rv-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+.rv-item { display: flex; flex-direction: column; gap: 3px; }
+.rv-lbl { font-family: var(--mono); font-size: 8px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); }
+.rv-val { font-size: 13px; color: var(--ink); font-weight: 500; word-break: break-word; }
+.rv-val.empty { color: #ccc; font-style: italic; font-size: 11px; font-weight: 400; }
+.cost-badge { display: inline-block; padding: 3px 12px; border-radius: 3px; font-size: 11px; font-weight: 600; }
+.cost-badge.cust { background: var(--cust); color: #fff; }
+.cost-badge.internal { background: var(--internal); color: #fff; }
+.cost-badge.capex { background: var(--capex); color: #fff; }
+table.rv-lines { width: 100%; border-collapse: collapse; font-size: 11px; }
+table.rv-lines thead th { font-family: var(--mono); font-size: 8px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); text-align: left; padding: 7px 10px; background: #f5f3ef; border-bottom: 1px solid var(--rule); }
+table.rv-lines tbody td { padding: 8px 10px; border-bottom: 1px solid var(--rule2); vertical-align: top; color: var(--ink2); }
+.rv-total { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--ink); border-radius: 2px; margin-top: 8px; }
+.rv-total-lbl { font-family: var(--mono); font-size: 9px; color: #666; letter-spacing: .1em; text-transform: uppercase; }
+.rv-total-val { font-family: var(--mono); font-size: 18px; color: #fff; font-weight: 500; }
+.rv-warn { background: #fff5f5; border: 1px solid #fca5a5; border-radius: 3px; padding: 10px 14px; font-family: var(--mono); font-size: 10px; color: var(--err); margin-top: 10px; line-height: 1.7; }
+
+/* ── PASTE MODAL ── */
+.paste-hint { font-family: var(--mono); font-size: 10px; color: var(--ink3); line-height: 1.75; margin-bottom: 12px; background: #f5f3ef; padding: 10px 14px; border-radius: 3px; border-left: 3px solid var(--accent2); }
+.paste-hint code { background: #e0ddd7; padding: 1px 5px; border-radius: 2px; font-size: 9px; }
+.paste-area { width: 100%; border: 1.5px solid var(--rule); background: var(--surface); padding: 12px; font-family: var(--mono); font-size: 11px; color: var(--ink); outline: none; border-radius: 3px; resize: vertical; min-height: 140px; line-height: 1.65; transition: border-color .15s; }
+.paste-area:focus { border-color: var(--accent2); }
+.paste-preview { margin-top: 10px; font-family: var(--mono); font-size: 10px; color: var(--green); min-height: 18px; }
+
+/* ── SUCCESS ── */
+.success { display: none; }
+.success.show { display: block; background: var(--white); border: 1px solid var(--rule); padding: 56px 40px; text-align: center; }
+.success-check { width: 56px; height: 56px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 24px; color: #fff; }
+.success-title { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+.success-ref { font-family: var(--mono); font-size: 12px; color: var(--ink3); margin-bottom: 32px; }
+.success-chain { max-width: 440px; margin: 0 auto; text-align: left; }
+.sc-row { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--rule2); font-size: 12px; color: var(--ink2); line-height: 1.55; }
+.sc-row:last-child { border-bottom: none; }
+.sc-lbl { font-family: var(--mono); font-size: 9px; color: var(--ink3); min-width: 40px; padding-top: 1px; text-transform: uppercase; letter-spacing: .08em; flex-shrink: 0; }
+.success-actions { margin-top: 28px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+/* ── PRINT ── */
+@media print {
+  body { background: #fff; }
+  .draft-banner, .submit-bar, .toast-wrap, .overlay, .add-line-row, .btn-paste, .del-btn { display: none !important; }
+  .hdr { position: static; box-shadow: none; }
+  .body { padding: 12px 0; max-width: 100%; }
+  .card { border: 1px solid #ccc; page-break-inside: avoid; margin-bottom: 8px; box-shadow: none !important; }
+  .card-head, .totals-bar { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  table.lines { min-width: unset; }
+  .cost-opt.sel-cust .cost-opt-inner, .cost-opt.sel-internal .cost-opt-inner { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .ap-dot { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .success, .overlay { display: none !important; }
+  @page { margin: 1.5cm 2cm; }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .fg-3, .fg-4 { grid-template-columns: 1fr 1fr; }
+  .hdr { padding: 0 20px; }
+}
+@media (max-width: 600px) {
+  .fg-2, .fg-3, .fg-4 { grid-template-columns: 1fr; }
+  .sig-grid { grid-template-columns: 1fr; }
+  .hdr { grid-template-columns: 1fr; padding: 12px 16px; min-height: auto; gap: 6px; }
+  .hdr-brand { border-right: none; padding-right: 0; }
+  .hdr-title { padding-left: 0; }
+  .hdr-meta { align-items: flex-start; flex-direction: row; flex-wrap: wrap; gap: 6px; }
+  .body { padding: 12px 10px 90px; }
+  .cost-toggle { grid-template-columns: 1fr; }
+  .cost-opt .cost-opt-inner { border-right: none !important; border-bottom: 1px solid var(--rule); }
+  .cost-opt:last-child .cost-opt-inner { border-bottom: none; }
+  .capex-panel-inner { flex-direction: column; }
+  .submit-bar { flex-direction: column; align-items: stretch; gap: 10px; }
+  .btn-row { flex-wrap: wrap; }
+  .btn-sub, .btn-sec { text-align: center; }
+  .draft-banner { padding: 10px 16px; }
+  .rv-grid, .rv-grid-3 { grid-template-columns: 1fr 1fr; }
+  .modal-foot { flex-direction: column; align-items: stretch; }
+  .modal-btns { flex-direction: column; }
+  .totals-bar { flex-direction: column; align-items: flex-end; }
+}
+</style>
+</head>
+<body>
+
+<div class="demo-banner" role="note">Demo version — sample data only; submissions are not sent anywhere.</div>
+
+<!-- Draft restore banner -->
+<div class="draft-banner" id="draft-banner">
+  <div class="draft-banner-text">💾 <span>Draft found from <strong id="draft-date"></strong> — restore your work?</span></div>
+  <div class="draft-actions">
+    <button class="dbtn dbtn-restore" onclick="restoreDraft()">Restore draft</button>
+    <button class="dbtn dbtn-dismiss" onclick="dismissDraft()">Start fresh</button>
+  </div>
+</div>
+
+<!-- Header -->
+<div class="hdr">
+  <div class="hdr-brand">
+    <div class="logo"><span class="brand-name">Purchase Request Portal — Demo</span></div>
+    <div><div class="brand-sub">Procurement</div></div>
+  </div>
+  <div class="hdr-title"><h1>Purchase Requisition Form</h1></div>
+  <div class="hdr-meta">
+    <div class="ref-num" id="hdr-ref">Generating…</div>
+    <div class="recipient-tag" id="hdr-recipient">→ Select an account</div>
+    <div class="draft-ind" id="draft-ind"><div class="draft-dot"></div><span>Draft saved</span></div>
+  </div>
+</div>
+
+<!-- Body -->
+<div class="body">
+
+<!-- 00 Account gate — must be chosen first; drives every account-specific field below -->
+<div class="acct-gate" id="acct-gate">
+  <div class="acct-gate-head">
+    <span class="acct-gate-title">Which account is this purchase for? <span class="req">*</span></span>
+    <span class="acct-gate-hint">This sets the cost types, approvers, ship-to sites and buyer for the rest of the form.</span>
+  </div>
+  <div class="acct-grid" id="acct-grid"></div>
+  <div class="acct-ctx" id="acct-ctx"></div>
+  <span class="ferr" id="ferr-acct">Please select an account.</span>
+</div>
+
+<!-- 01 Requester -->
+<div class="card">
+  <div class="card-head"><span class="card-head-title">Requester information</span><span class="card-head-num">01 / 06</span></div>
+  <div class="card-body">
+    <div class="fg fg-4" style="margin-bottom:16px;">
+      <div class="field">
+        <label>Requested by <span class="req">*</span></label>
+        <input type="text" id="req-by" placeholder="Full name" autocomplete="name">
+        <span class="ferr" id="ferr-req-by">Please enter your name.</span>
+      </div>
+      <div class="field">
+        <label>Department <span class="req">*</span></label>
+        <select id="req-dept">
+          <option value="">— Select department —</option>
+          <option>Operations</option>
+          <option>Engineering</option>
+          <option>Finance</option>
+          <option>Procurement</option>
+          <option>Logistics</option>
+          <option>Quality</option>
+          <option>IT</option>
+          <option>HR</option>
+        </select>
+        <span class="ferr" id="ferr-req-dept">Please select your department.</span>
+      </div>
+      <div class="field">
+        <label>Date <span class="req">*</span></label>
+        <input type="date" id="req-date" class="prefilled" readonly>
+      </div>
+      <div class="field">
+        <label>Requested delivery date <span class="req">*</span></label>
+        <input type="date" id="req-delivery">
+        <span class="ferr" id="ferr-req-delivery">Please enter a delivery date.</span>
+      </div>
+    </div>
+    <div class="fg fg-3">
+      <div class="field">
+        <label>Requester email <span class="req">*</span></label>
+        <input type="email" id="req-email" placeholder="you@example.com" autocomplete="email">
+        <span class="ferr" id="ferr-req-email">Please enter a valid email address.</span>
+      </div>
+      <div class="field" style="grid-column:span 2;">
+        <label>Approving manager <span class="req">*</span></label>
+        <select id="mgr-select" onchange="onApproverChange()">
+          <option value="">— Select an account first —</option>
+        </select>
+        <span class="ferr" id="ferr-mgr-select">Please select your approving manager.</span>
+      </div>
+    </div>
+    <div class="fg fg-2" id="mgr-manual-wrap" style="display:none;margin-top:16px;">
+      <div class="field">
+        <label>Manager name <span class="req">*</span></label>
+        <input type="text" id="mgr-name" placeholder="Manager full name">
+        <span class="ferr" id="ferr-mgr-name">Please enter your manager's name.</span>
+      </div>
+      <div class="field">
+        <label>Manager email <span class="req">*</span></label>
+        <input type="email" id="mgr-email" placeholder="manager@example.com">
+        <span class="ferr" id="ferr-mgr-email">Please enter a valid manager email.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 02 Classification -->
+<div class="card">
+  <div class="card-head"><span class="card-head-title">Cost classification &amp; request details</span><span class="card-head-num">02 / 06</span></div>
+  <div class="card-body">
+    <div class="fg fg-2" style="margin-bottom:16px;">
+      <div class="field">
+        <label>Cost type <span class="req">*</span> <span style="font-weight:400;color:var(--ink3);text-transform:none;letter-spacing:0;font-size:10px;">— set automatically by the questions below</span></label>
+        <div class="cost-toggle" id="cost-toggle"></div>
+        <span class="ferr" id="ferr-cost">Please answer the classification questions below.</span>
+      </div>
+      <div class="field">
+        <label>Urgency <span class="req">*</span></label>
+        <select id="urgency">
+          <option value="standard">Standard — 3 days to place order + shipping</option>
+          <option value="urgent">Urgent — order placed within 1 day + shipping</option>
+          <option value="critical">Critical — order placed ASAP + shipping, production impacted</option>
+        </select>
+      </div>
+    </div>
+    <!-- CapEx / Expense decision wizard — answers drive the cost type above -->
+    <div class="fg fg-1" style="margin-bottom:16px;">
+      <div class="field">
+        <label>What are you buying? <span class="req">*</span></label>
+        <div class="wiz" id="wiz">
+          <div class="wiz-q">
+            <span class="wiz-q-lbl">1 &nbsp;·&nbsp; Category — pick the closest match</span>
+            <div class="wiz-opts" id="wiz-cat"></div>
+          </div>
+          <div class="wiz-q" id="wiz-life-q" style="display:none;">
+            <span class="wiz-q-lbl">2 &nbsp;·&nbsp; Will this item still be in service in more than 12 months?</span>
+            <div class="wiz-opts" id="wiz-life"></div>
+          </div>
+          <div class="wiz-q" id="wiz-who-q">
+            <span class="wiz-q-lbl" id="wiz-who-lbl">3 &nbsp;·&nbsp; Who bears the cost?</span>
+            <div class="wiz-opts" id="wiz-who"></div>
+          </div>
+          <div class="wiz-verdict" id="wiz-verdict"></div>
+        </div>
+        <span class="ferr" id="ferr-wiz">Please answer the questions above.</span>
+      </div>
+    </div>
+    <div class="fg fg-2" style="margin-bottom:16px;">
+      <div class="field">
+        <label>Program</label>
+        <input type="text" id="program-global" placeholder="Select an account first">
+      </div>
+      <div class="field">
+        <label>Ship to / site <span class="req">*</span></label>
+        <select id="ship-site">
+          <option value="">— Select an account first —</option>
+        </select>
+        <span class="ferr" id="ferr-ship-site">Please select the delivery site.</span>
+      </div>
+    </div>
+    <div id="ticket-wrap" style="display:none;margin-bottom:16px;" class="fg fg-2">
+      <div class="field">
+        <label>Approval Ticket ID</label>
+        <input type="text" id="ticket-id" placeholder="e.g. CLA-1234 — leave blank if not yet raised">
+      </div>
+    </div>
+    <div class="fg fg-1">
+      <div class="field">
+        <label>Reason for request <span class="req">*</span></label>
+        <textarea id="reason" placeholder="e.g. New layout — consumable materials required for production setup…"></textarea>
+        <span class="ferr" id="ferr-reason">Please provide a reason for this request.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CapEx Panel (visible only when CapEx cost type selected) -->
+<div class="card" id="capex-panel" style="display:none;border-left:3px solid var(--capex);">
+  <div class="card-head" style="background:#0f3d2b;">
+    <span class="card-head-title" style="color:#6ec9a2;">Capital Expenditure Request</span>
+    <span style="font-family:var(--mono);font-size:9px;background:var(--capex);color:#fff;padding:3px 10px;border-radius:2px;letter-spacing:.1em;">CAPEX FORM REQUIRED</span>
+  </div>
+  <div class="card-body">
+    <div class="capex-panel-inner">
+      <div class="capex-info-col">
+        <p class="capex-intro">CapEx covers assets with a useful life over 12 months — equipment, machinery, installations, IT hardware, warehouse fixtures, and similar. These hit the balance sheet, not the P&amp;L, and require Finance sign-off in addition to the standard approval chain.</p>
+        <div class="capex-steps">
+          <div class="capex-step"><div class="capex-step-num">1</div><span>Download the CapEx template (disabled in this demo) and open it in Excel.</span></div>
+          <div class="capex-step"><div class="capex-step-num">2</div><span>Fill in the <strong>CAPEX Request Fields</strong> tab — project title, classification, description, purpose, and asset category.</span></div>
+          <div class="capex-step"><div class="capex-step-num">3</div><span>Fill in the <strong>Line Detail</strong> tab with item descriptions, quantities, and costs.</span></div>
+          <div class="capex-step"><div class="capex-step-num">4</div><span>Complete and submit this PR form — it flags this as a CapEx request and emails <span id="capex-buyer-1">the account buyer</span>.</span></div>
+          <div class="capex-step"><div class="capex-step-num">5</div><span>Reply to that email with the completed CapEx Excel <strong>attached</strong>.</span></div>
+        </div>
+        <span class="btn-capex-dl" id="capex-dl-btn" style="opacity:.55;cursor:not-allowed;" title="Template download disabled in demo">↓ &nbsp;CapEx Template — download disabled in demo</span>
+      </div>
+    </div>
+    <div class="capex-note">This PR will be marked as a CapEx request. <span id="capex-buyer-2">The account buyer</span> will not create a PO until the completed CapEx Excel is received and Finance approval is confirmed.</div>
+  </div>
+</div>
+
+<!-- 03 Line Items -->
+<div class="card">
+  <div class="card-head"><span class="card-head-title">Line items</span><span class="card-head-num">03 / 06</span></div>
+  <div class="card-body">
+    <div class="line-toolbar">
+      <div class="line-hint" id="line-hint">Select an account to see the approval threshold.&nbsp; INV = Inventory · NON-INV = Non-inventory.&nbsp; Add a per-line justification for anything a manager may query.</div>
+      <button class="btn-paste" onclick="openPaste()">⊞ Paste multiple</button>
+    </div>
+    <span class="ferr" id="ferr-lines" style="margin-bottom:8px;">Please add at least one line item.</span>
+    <div class="line-wrap">
+      <table class="lines">
+        <thead>
+          <tr>
+            <th style="width:28px;">#</th>
+            <th style="width:72px;">Qty</th>
+            <th style="width:14%">Internal Part No.</th>
+            <th style="width:14%">Vendor Part No.</th>
+            <th style="width:7%">INV Type</th>
+            <th>Complete description &amp; call outs</th>
+            <th style="width:13%">Link / Source URL</th>
+            <th style="width:9%">Unit Cost ($)</th>
+            <th style="width:13%">Justification</th>
+            <th style="width:52px;">Flag</th>
+            <th style="width:52px;"></th>
+          </tr>
+        </thead>
+        <tbody id="lines-body"></tbody>
+      </table>
+    </div>
+    <div class="add-line-row">
+      <button class="add-line" onclick="addLineAndFocus()">+ Add line item</button>
+      <span class="add-line-hint">Tab from Unit Cost to add next row &nbsp;·&nbsp; ⊕ to duplicate a row</span>
+      <span class="line-count" id="line-count"></span>
+    </div>
+    <div class="totals-bar">
+      <span class="threshold-pill" id="thresh-pill"></span>
+      <div class="total-item">
+        <span class="total-lbl">Grand Total</span>
+        <span class="total-val" id="total-val">$0.00</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 04 Vendor -->
+<div class="card">
+  <div class="card-head"><span class="card-head-title">Preferred vendor</span><span class="card-head-num">04 / 06</span></div>
+  <div class="card-body">
+    <div class="fg fg-3" style="margin-bottom:14px;">
+      <div class="field"><label>Vendor name</label><input type="text" id="vendor-name" placeholder="If known"></div>
+      <div class="field"><label>Vendor contact</label><input type="text" id="vendor-contact" placeholder="Name / email / phone"></div>
+      <div class="field"><label>Quote / PO reference</label><input type="text" id="vendor-ref" placeholder="Quote #, previous PO…"></div>
+    </div>
+    <div class="field">
+      <label>Attach quote <span style="font-weight:400;color:var(--ink3);text-transform:none;letter-spacing:0;font-size:10px;">PDF, Word, Excel or image — max 5 MB</span></label>
+      <div class="file-wrap" id="file-wrap">
+        <input type="file" id="quote-file" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+        <span class="file-label" id="file-label">No file chosen</span>
+        <button type="button" class="file-btn" onclick="document.getElementById('quote-file').click()">Browse</button>
+        <button type="button" class="file-clear" id="file-clear" onclick="clearQuoteFile()" style="display:none;">✕</button>
+      </div>
+      <span class="ferr" id="ferr-quote-file"></span>
+    </div>
+  </div>
+</div>
+
+<!-- 05 Approval Preview -->
+<div class="card">
+  <div class="card-head"><span class="card-head-title">Approval routing — live preview</span><span class="card-head-num">05 / 06</span></div>
+  <div class="card-body">
+    <div class="approval-chain" id="ap-chain">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--ink3);padding:12px 0;">Select a cost type and add line items to see your approval chain.</div>
+    </div>
+  </div>
+</div>
+
+<!-- 06 Approvals -->
+<div class="card">
+  <div class="card-head"><span class="card-head-title">Approval workflow</span><span class="card-head-num">06 / 06</span></div>
+  <div class="card-body">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+      <div style="background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:16px;">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px;">Step 1</div>
+        <div style="font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:4px;" id="wf1-title">Manager approves</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--ink3);line-height:1.6;" id="wf1-body">Select an account to see how requests are routed.</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:16px;">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px;">Step 2</div>
+        <div style="font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:4px;">Additional approval</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--ink3);line-height:1.6;" id="wf2-body">Threshold and CapEx rules depend on the account.</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:16px;">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px;">Step 3</div>
+        <div style="font-size:13px;font-weight:600;color:var(--ink2);margin-bottom:4px;">PO created in the ERP</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--ink3);line-height:1.6;" id="wf3-body">The account buyer raises the PO once all approvals are confirmed. The ERP triggers its own PO approval chain based on value.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Submit bar -->
+<div class="submit-bar" id="submit-bar">
+  <div class="submit-note"><strong>Demo:</strong> nothing is sent. In production this routes to <strong id="submit-mgr">your manager</strong> via Power Automate · <span id="submit-buyer">the buyer</span> notified on approval</div>
+  <div class="btn-row">
+    <button class="btn-sec" onclick="saveDraft()">💾 Save draft</button>
+    <button class="btn-sec" onclick="window.print()">🖨 Print / PDF</button>
+    <button class="btn-sec" onclick="clearForm()">✕ Clear form</button>
+    <button class="btn-sub" onclick="openReview()">Review &amp; Submit ↗</button>
+  </div>
+</div>
+
+<!-- Success -->
+<div class="success" id="success">
+  <div class="success-check">✓</div>
+  <div class="success-title">Request submitted (demo)</div>
+  <div class="success-ref" id="succ-ref"></div>
+  <div class="success-chain">
+    <div class="sc-row"><span class="sc-lbl">Now</span><span>Manager notified by email to pre-approve this request.</span></div>
+    <div class="sc-row" id="sc-row-2"><span class="sc-lbl">Next</span><span>The account buyer creates the PO in the ERP once approved.</span></div>
+    <div class="sc-row"><span class="sc-lbl">Then</span><span>PO approval chain triggers automatically based on value &amp; cost type.</span></div>
+    <div class="sc-row" id="sc-row-4"><span class="sc-lbl">Done</span><span id="sc-row-4-txt">The buyer releases the PO to the vendor once all approvals are complete.</span></div>
+  </div>
+  <div id="capex-email-banner" style="display:none;background:#fff7ed;border:2px solid #f59e0b;border-radius:8px;padding:16px 20px;margin:16px 0;text-align:left;">
+    <div style="font-weight:700;color:#b45309;margin-bottom:6px;">⚠ Action required — CapEx Excel not yet sent</div>
+    <div style="font-size:14px;color:#92400e;margin-bottom:12px;" id="capex-banner-txt">Your PR has been submitted. You must now email your completed CapEx Excel template to the account buyer. No PO can be raised until it is received.</div>
+    <button class="btn-sub" id="capex-email-btn" onclick="">📎 Open email to attach CapEx Excel</button>
+  </div>
+  <div class="success-actions">
+    <button class="btn-sub" onclick="window.print()">Print / Save PDF</button>
+    <button class="btn-sec" onclick="startNew()">Start new request</button>
+  </div>
+</div>
+
+<div class="demo-footer">Built by Ankit Kumar — HTML/JavaScript front end; in production, Power Automate routes each request and its quote to the approver.</div>
+
+</div><!-- /body -->
+
+<!-- Review modal -->
+<div class="overlay" id="review-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-head-title">Review — confirm before submitting</span>
+      <button class="modal-close" onclick="closeReview()">×</button>
+    </div>
+    <div class="modal-body" id="review-body"></div>
+    <div class="modal-foot">
+      <span class="modal-foot-note">Demo mode — confirming shows the success screen only. Nothing is sent anywhere.</span>
+      <div class="modal-btns">
+        <button class="btn-sec" onclick="closeReview()">← Edit</button>
+        <button class="btn-sub" id="confirm-btn" onclick="confirmSubmit()">Confirm &amp; Submit ↗</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Paste modal -->
+<div class="overlay" id="paste-modal">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-head">
+      <span class="modal-head-title">Paste multiple line items</span>
+      <button class="modal-close" onclick="closePaste()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="paste-hint">
+        Paste tab-separated or comma-separated rows from Excel / Google Sheets.<br>
+        Column order: <code>Qty</code> · <code>Internal PN</code> · <code>Vendor PN</code> · <code>INV/NON-INV</code> · <code>Description</code> · <code>Unit Cost</code><br>
+        Trailing columns can be omitted. Existing lines are preserved.
+      </div>
+      <textarea class="paste-area" id="paste-area" placeholder="Paste rows here…" oninput="previewPaste()"></textarea>
+      <div class="paste-preview" id="paste-preview"></div>
+    </div>
+    <div class="modal-foot">
+      <span class="modal-foot-note">Each row becomes one line item.</span>
+      <div class="modal-btns">
+        <button class="btn-sec" onclick="closePaste()">Cancel</button>
+        <button class="btn-sub" onclick="importPasted()">Import lines ↗</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+// ── Config ──
+const POWER_AUTOMATE_URL = '';   // demo: no endpoint — submissions are never sent
+const DRAFT_KEY = 'pr_form_demo_draft_v1';
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ACCOUNT CONFIG — the only block you need to edit to add or fix an account.
+   Everything else in this form reads from here.
+
+   ⚠ configConfirmed:false makes the form show an amber "unconfirmed" strip
+     for that account. Set it to true once the approvers, sites and
+     thresholds below have been verified with the account owner.
+   ══════════════════════════════════════════════════════════════════════════ */
+const ACCOUNTS = {
+  clienta: {
+    label: 'Client A',
+    tag: 'Customer account',
+    desc: 'Recharged account · Programs Alpha, Beta',
+    color: '#6b2fa0',
+    tint: '#f7f2fc',
+    configConfirmed: true,
+    customerCost: true,                        // this account is recharged
+    customerCostLabel: 'Client-billed',
+    customerCostShort: 'Client A',
+    customerCostDesc: 'Charged to Client A<br>Ticket required ≥ threshold',
+    ticket: true,
+    ticketLabel: 'Approval Ticket ID',
+    ticketPlaceholder: 'e.g. CLA-1234 — leave blank if not yet raised',
+    threshold: 200,                            // per-line extra-approval trigger
+    capexThreshold: 1000,
+    programPlaceholder: 'e.g. Program Alpha…',
+    routing: 'manager',                        // 'manager' = straight to approver
+    purchaser: { name: 'Buyer (Demo)', email: 'buyer@example.com' },
+    approvers: [
+      { name: 'Manager A (Demo)', email: 'approver.a@example.com' },
+      { name: 'Manager B (Demo)', email: 'approver.b@example.com' }
+    ],
+    sites: [
+      { label: 'Warehouse A', code: '' }
+    ]
+  },
+
+  clientb: {
+    label: 'Client B',
+    tag: 'Customer account',
+    desc: 'All purchases at internal cost — no customer recharge',
+    color: '#0d5c63',
+    tint: '#eff7f8',
+    configConfirmed: false,                    // demo: shows the "unconfirmed config" strip
+    customerCost: false,
+    ticket: false,
+    threshold: 200,
+    capexThreshold: 1000,
+    programPlaceholder: 'e.g. Program Gamma…',
+    routing: 'purchaser',                      // buyer completes vendor/pricing, then approver
+    purchaser: { name: 'Buyer (Demo)', email: 'buyer@example.com' },
+    approvers: [
+      { name: 'Manager C (Demo)', email: 'approver.c@example.com' },
+      { name: 'Manager D (Demo)', email: 'approver.d@example.com' }
+    ],
+    sites: [
+      { label: 'Warehouse A', code: '' },
+      { label: 'Warehouse B', code: '1001' }
+    ]
+  },
+
+  clientc: {
+    label: 'Client C',
+    tag: 'Customer account',
+    desc: 'Ship-to differs from main site — confirm site on every order',
+    color: '#8a5a00',
+    tint: '#fbf6ea',
+    configConfirmed: false,
+    customerCost: false,
+    ticket: false,
+    threshold: 200,
+    capexThreshold: 1000,
+    programPlaceholder: 'e.g. Program Delta…',
+    routing: 'purchaser',
+    purchaser: { name: 'Buyer (Demo)', email: 'buyer@example.com' },
+    approvers: [
+      { name: 'Manager E (Demo)', email: 'approver.e@example.com' },
+      { name: 'Manager F (Demo)', email: 'approver.f@example.com' }
+    ],
+    sites: [
+      { label: 'Warehouse C', code: '' }
+    ]
+  }
+};
+
+/* Wizard categories. force: 'expense' | 'capex' | 'ask' (ask = life + value test) */
+const WIZ_CATS = [
+  { id: 'consumables', label: 'Consumables, packaging, cleaning', force: 'expense' },
+  { id: 'spares',      label: 'Repair parts, spares, materials',  force: 'expense' },
+  { id: 'services',    label: 'Service, labour, freight',         force: 'expense' },
+  { id: 'tools',       label: 'Hand tools, small equipment',      force: 'ask'     },
+  { id: 'it',          label: 'IT hardware, laptops, monitors',   force: 'ask'     },
+  { id: 'test',        label: 'Test equipment, fixtures',         force: 'ask'     },
+  { id: 'machinery',   label: 'Machinery, installation, building works', force: 'capex' }
+];
+
+// ── State ──
+let accountKey = null;
+let costType = null;
+let costOverride = false;
+let wizState = { cat: null, life: null, who: null };
+let lineCounter = 0;
+let saveTimer = null;
+let refId = '';
+
+// ── Init ──
+(function init() {
+  const saved = getSavedDraft();
+  refId = (saved && saved.refId) ? saved.refId : genRef();
+  document.getElementById('hdr-ref').textContent = refId;
+  const todayStr = new Date().toISOString().split('T')[0];
+  document.getElementById('req-date').value = todayStr;
+  document.getElementById('req-delivery').min = todayStr;
+
+  if (saved) {
+    const when = saved.savedAt ? new Date(saved.savedAt).toLocaleString() : 'earlier';
+    document.getElementById('draft-date').textContent = when;
+    document.getElementById('draft-banner').classList.add('show');
+  }
+
+  // Live listeners
+  ['req-by','mgr-name','mgr-email','reason','urgency','program-global'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.addEventListener('input', refreshPreview); el.addEventListener('input', sched); }
+  });
+  ['req-dept','req-email','req-delivery','vendor-name','vendor-contact','vendor-ref'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', sched);
+  });
+  ['req-by','req-dept','req-delivery','mgr-name','mgr-email','reason'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', () => { if (el.value.trim()) clearErr(id); });
+      el.addEventListener('blur',  () => { if (el.value.trim()) clearErr(id); });
+    }
+  });
+  document.getElementById('mgr-name').addEventListener('input', updateSubmitBar);
+  document.getElementById('mgr-email').addEventListener('input', updateSubmitBar);
+
+  // Modal backdrop close
+  document.getElementById('review-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeReview(); });
+  document.getElementById('paste-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closePaste(); });
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeReview(); closePaste(); }
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveDraft(); }
+  });
+
+  renderAccounts();
+  renderCostOptions();
+  addLine(); addLine();
+})();
+
+function genRef() {
+  return 'PR-' + new Date().getFullYear() + '-' + Math.random().toString(36).substring(2,6).toUpperCase();
+}
+
+// ── Draft ──
+function getSavedDraft() {
+  try { return JSON.parse(localStorage.getItem(DRAFT_KEY)); } catch { return null; }
+}
+function sched() { clearTimeout(saveTimer); saveTimer = setTimeout(saveDraft, 1800); }
+function saveDraft() {
+  const d = collectFormData();
+  d.refId = refId;
+  d.costType = costType;
+  d.savedAt = new Date().toISOString();
+  d.lineRaw = captureLineRaw();
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
+  const ind = document.getElementById('draft-ind');
+  ind.classList.add('show');
+  setTimeout(() => ind.classList.remove('show'), 3000);
+  toast('Draft saved', 'success');
+}
+function captureLineRaw() {
+  const rows = [];
+  document.querySelectorAll('#lines-body tr').forEach(tr => {
+    const ti = tr.querySelectorAll('input[type=text]');
+    const ni = tr.querySelectorAll('input[type=number]');
+    const hid = tr.querySelector('input[type=hidden]');
+    rows.push({ internalPn: ti[0]?.value||'', vendor: ti[1]?.value||'',
+                desc: ti[2]?.value||'', link: ti[3]?.value||'', justification: ti[4]?.value||'',
+                qty: ni[0]?.value||'1', unitCost: ni[1]?.value||'', invType: hid?.value||'' });
+  });
+  return rows;
+}
+function restoreDraft() {
+  const d = getSavedDraft();
+  if (!d) return;
+  setV('req-by', d.requester?.name);
+  setV('req-dept', d.requester?.department);
+  setV('req-email', d.requester?.email);
+  setV('req-delivery', d.requester?.deliveryRequired);
+  if (d.account && ACCOUNTS[d.account]) selectAccount(d.account);
+  setV('reason', d.reason);
+  setV('urgency', d.urgency);
+  setV('program-global', d.program);
+  setV('ticket-id', d.ticketId);
+  setV('vendor-name', d.vendor?.name);
+  setV('vendor-contact', d.vendor?.contact);
+  setV('vendor-ref', d.vendor?.quoteRef);
+  // Restore the approving manager by matching the saved email against the account list
+  if (d.manager?.email && acct()) {
+    const idx = acct().approvers.findIndex(m => m.email.toLowerCase() === d.manager.email.toLowerCase());
+    const sel = document.getElementById('mgr-select');
+    sel.value = idx >= 0 ? String(idx) : 'other';
+    onApproverChange();
+    if (idx < 0) { setV('mgr-name', d.manager.name); setV('mgr-email', d.manager.email); }
+  }
+  setV('ship-site', d.shipTo);
+  if (d.classification) {
+    wizState = { cat: d.classification.category, life: d.classification.overTwelveMonths, who: d.classification.costBearer };
+    costOverride = !!d.costTypeSetManually;
+    if (costOverride && d.costType) costType = d.costType;
+    renderWizard();
+  }
+  if (d.lineRaw?.length) {
+    document.getElementById('lines-body').innerHTML = '';
+    lineCounter = 0;
+    d.lineRaw.forEach(r => {
+      const id = addLine();
+      const tr = document.getElementById('line-' + id);
+      if (!tr) return;
+      const ti = tr.querySelectorAll('input[type=text]');
+      const ni = tr.querySelectorAll('input[type=number]');
+      if (ti[0]) ti[0].value = r.internalPn;
+      if (ti[1]) ti[1].value = r.vendor;
+      if (ti[2]) ti[2].value = r.desc;
+      if (ti[3]) ti[3].value = r.link || '';
+      if (ti[4]) ti[4].value = r.justification || '';
+      if (ni[0]) ni[0].value = r.qty;
+      if (ni[1]) ni[1].value = r.unitCost;
+      if (r.invType) toggleInv(id, r.invType === 'INV' ? 'inv' : 'noninv');
+    });
+  }
+  calcTotal(); refreshPreview(); updateSubmitBar();
+  document.getElementById('draft-banner').classList.remove('show');
+  toast('Draft restored', 'success');
+}
+function dismissDraft() {
+  localStorage.removeItem(DRAFT_KEY);
+  document.getElementById('draft-banner').classList.remove('show');
+}
+function setV(id, val) { const el = document.getElementById(id); if (el && val != null) el.value = val; }
+
+// ── Account ──
+function acct() { return accountKey ? ACCOUNTS[accountKey] : null; }
+function lineThreshold() { const a = acct(); return a ? a.threshold : 200; }
+function costLabelFor(t) {
+  const a = acct();
+  if (t === 'capex') return 'CapEx — Capital Expenditure';
+  if (t === 'customer') return a ? a.customerCostLabel : 'Customer Cost';
+  if (t === 'internal') return 'Internal Cost';
+  return '';
+}
+function maxUnitCost() {
+  let m = 0;
+  document.querySelectorAll('#lines-body tr').forEach(tr => {
+    const ni = tr.querySelectorAll('input[type=number]');
+    if (ni.length >= 2) m = Math.max(m, parseFloat(ni[1].value) || 0);
+  });
+  return m;
+}
+
+function renderAccounts() {
+  document.getElementById('acct-grid').innerHTML = Object.keys(ACCOUNTS).map(k => {
+    const a = ACCOUNTS[k];
+    return `<label class="acct-opt" id="acct-opt-${k}" style="--acct-c:${a.color};--acct-bg:${a.tint};" onclick="selectAccount('${k}')">
+      <input type="radio" name="account" value="${k}">
+      <span class="acct-opt-tag">${a.tag}</span>
+      <div class="acct-opt-name">${a.label}</div>
+      <span class="acct-opt-desc">${a.desc}</span>
+    </label>`;
+  }).join('');
+}
+
+function selectAccount(key) {
+  if (!ACCOUNTS[key]) return;
+  const changed = accountKey !== key;
+  accountKey = key;
+  const a = acct();
+
+  Object.keys(ACCOUNTS).forEach(k => {
+    const el = document.getElementById('acct-opt-' + k);
+    if (el) el.className = 'acct-opt' + (k === key ? ' sel' : '');
+  });
+  document.getElementById('acct-gate').classList.remove('invalid');
+  document.getElementById('ferr-acct').classList.remove('show');
+
+  // Context strip
+  const warn = a.configConfirmed ? '' :
+    `<div style="background:#fff7ed;border:1px solid #f59e0b;border-left:3px solid #f59e0b;padding:8px 12px;border-radius:0 2px 2px 0;color:#8a5a00;margin-bottom:8px;">
+       <strong>Config not yet confirmed for ${a.label}.</strong> Approvers, sites and thresholds below are placeholders — verify before rolling this account out.
+     </div>`;
+  document.getElementById('acct-ctx').innerHTML = warn +
+    `<strong>Buyer:</strong> ${a.purchaser.name} &nbsp;·&nbsp; ` +
+    `<strong>Cost types:</strong> ${a.customerCost ? a.customerCostLabel + ', ' : ''}Internal Cost, CapEx &nbsp;·&nbsp; ` +
+    `<strong>Extra approval at:</strong> $${a.threshold}/line &nbsp;·&nbsp; ` +
+    `<strong>Route:</strong> ${a.routing === 'purchaser' ? 'Requester → Buyer → Approving manager' : 'Requester → Approving manager'}`;
+  document.getElementById('acct-ctx').classList.add('show');
+
+  document.getElementById('hdr-recipient').textContent = '→ ' + a.purchaser.email;
+  document.getElementById('program-global').placeholder = a.programPlaceholder;
+  document.getElementById('line-hint').innerHTML =
+    `Items with unit cost ≥ $${a.threshold} trigger additional approval.&nbsp; INV = Inventory · NON-INV = Non-inventory.&nbsp; Add a per-line justification for anything a manager may query.`;
+
+  if (changed) { wizState = { cat: null, life: null, who: null }; costOverride = false; costType = null; }
+  renderApprovers(); renderSites(); renderWizard(); renderCostOptions();
+  calcTotal(); refreshPreview(); updateSubmitBar(); sched();
+}
+
+function renderApprovers() {
+  const a = acct(); const sel = document.getElementById('mgr-select');
+  if (!a) return;
+  sel.innerHTML = '<option value="">— Select approving manager —</option>' +
+    a.approvers.map((m, i) => `<option value="${i}">${m.name} · ${m.email}</option>`).join('') +
+    '<option value="other">Other — enter manually</option>';
+  document.getElementById('mgr-manual-wrap').style.display = 'none';
+  setV('mgr-name', ''); setV('mgr-email', '');
+}
+function onApproverChange() {
+  const a = acct(); const v = document.getElementById('mgr-select').value;
+  const manual = document.getElementById('mgr-manual-wrap');
+  clearErr('mgr-select');
+  if (v === 'other') {
+    manual.style.display = 'grid';
+    setV('mgr-name', ''); setV('mgr-email', '');
+  } else {
+    manual.style.display = 'none';
+    const m = (a && a.approvers[parseInt(v, 10)]) || null;
+    setV('mgr-name', m ? m.name : ''); setV('mgr-email', m ? m.email : '');
+  }
+  refreshPreview(); updateSubmitBar(); sched();
+}
+
+function renderSites() {
+  const a = acct(); const sel = document.getElementById('ship-site');
+  if (!a) return;
+  const opts = a.sites.map(s => {
+    const lbl = s.code ? `${s.label} (site ${s.code})` : s.label;
+    return `<option value="${esc(lbl)}">${lbl}</option>`;
+  }).join('');
+  // Only one site on this account — preselect it rather than make them click a list of one
+  sel.innerHTML = (a.sites.length === 1 ? '' : '<option value="">— Select delivery site —</option>') + opts;
+  sel.onchange = () => { clearErr('ship-site'); sched(); };
+}
+
+// ── CapEx / Expense wizard ──
+function renderWizard() {
+  const a = acct(); if (!a) return;
+  document.getElementById('wiz-cat').innerHTML = WIZ_CATS.map(c =>
+    `<button type="button" class="wiz-opt${wizState.cat === c.id ? ' on' : ''}" onclick="wizPick('cat','${c.id}')">${c.label}</button>`).join('');
+  document.getElementById('wiz-life').innerHTML =
+    `<button type="button" class="wiz-opt${wizState.life === 'yes' ? ' on' : ''}" onclick="wizPick('life','yes')">Yes — more than 12 months</button>
+     <button type="button" class="wiz-opt${wizState.life === 'no' ? ' on' : ''}" onclick="wizPick('life','no')">No — consumed within 12 months</button>`;
+
+  const whoQ = document.getElementById('wiz-who-q');
+  if (a.customerCost) {
+    whoQ.style.display = '';
+    document.getElementById('wiz-who').innerHTML =
+      `<button type="button" class="wiz-opt${wizState.who === 'customer' ? ' on' : ''}" onclick="wizPick('who','customer')">${a.customerCostLabel} — recharged to the customer</button>
+       <button type="button" class="wiz-opt${wizState.who === 'internal' ? ' on' : ''}" onclick="wizPick('who','internal')">Internal cost — we absorb it</button>`;
+  } else {
+    whoQ.style.display = 'none';
+    wizState.who = 'internal';   // no recharge on this account
+  }
+  const cat = WIZ_CATS.find(c => c.id === wizState.cat);
+  document.getElementById('wiz-life-q').style.display = (cat && cat.force === 'ask') ? '' : 'none';
+  evalWizard();
+}
+
+function wizPick(q, val) {
+  wizState[q] = val;
+  if (q === 'cat') wizState.life = null;
+  costOverride = false;
+  renderWizard(); sched();
+}
+
+function evalWizard() {
+  const a = acct(); if (!a) return;
+  const v = document.getElementById('wiz-verdict');
+  const cat = WIZ_CATS.find(c => c.id === wizState.cat);
+  if (!cat) { v.className = 'wiz-verdict'; v.innerHTML = ''; if (!costOverride) { costType = null; renderCostOptions(); } return; }
+
+  // On a recharged account the cost bearer must be answered — never default it silently
+  if (a.customerCost && !wizState.who) {
+    v.className = 'wiz-verdict show v-expense';
+    v.innerHTML = `Answer question 3 — is this recharged to ${a.label} or absorbed internally?`;
+    costType = null; renderCostOptions();
+    return;
+  }
+
+  let verdict = null, why = '';
+  if (cat.force === 'expense') { verdict = 'expense'; why = `${cat.label} is consumed in the period, so it is an operating expense.`; }
+  else if (cat.force === 'capex') { verdict = 'capex'; why = `${cat.label} is capitalised regardless of value.`; }
+  else {
+    if (wizState.life === 'no') { verdict = 'expense'; why = 'In service under 12 months, so it does not capitalise.'; }
+    else if (wizState.life === 'yes') {
+      const mx = maxUnitCost();
+      if (mx >= a.capexThreshold) { verdict = 'capex'; why = `Highest unit cost $${mx.toFixed(2)} is at or above the $${a.capexThreshold} capitalisation threshold, and it lasts over 12 months.`; }
+      else if (mx > 0) { verdict = 'expense'; why = `Highest unit cost $${mx.toFixed(2)} is below the $${a.capexThreshold} capitalisation threshold.`; }
+      else { v.className = 'wiz-verdict'; v.innerHTML = ''; return; }   // need unit costs first
+    } else { v.className = 'wiz-verdict'; v.innerHTML = ''; return; }
+  }
+
+  const resolved = verdict === 'capex' ? 'capex' : (wizState.who === 'customer' ? 'customer' : 'internal');
+  const label = verdict === 'capex' ? 'CapEx — Capital Expenditure'
+              : resolved === 'customer' ? a.customerCostLabel : 'Internal Cost';
+  const colour = verdict === 'capex' ? 'var(--capex)' : resolved === 'customer' ? a.color : 'var(--internal)';
+  const next = verdict === 'capex'
+    ? `Download and complete the CapEx template below. ${a.purchaser.name} cannot raise a PO until the CapEx Excel and Finance approval are in.`
+    : `No CapEx form needed. This goes to your approving manager, then ${a.purchaser.name} raises the PO.`;
+
+  v.className = 'wiz-verdict show ' + (verdict === 'capex' ? 'v-capex' : 'v-expense');
+  v.innerHTML = `<span class="wiz-verdict-badge" style="background:${colour};">${label}</span><br>${why}<br><strong>Next:</strong> ${next}` +
+    (costOverride ? `<br><em>Manually overridden — the form is using your choice, not this result.</em>` : '') +
+    `<br><button type="button" class="wiz-override" onclick="enableCostOverride()">This isn't right — let me set the cost type myself</button>`;
+
+  if (!costOverride) { costType = resolved; renderCostOptions(); }
+}
+
+function enableCostOverride() {
+  costOverride = true;
+  toast('Cost type unlocked — pick it manually above', 'success');
+  renderCostOptions(); evalWizard();
+  document.getElementById('cost-toggle').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ── Cost type ──
+function renderCostOptions() {
+  const a = acct(); const box = document.getElementById('cost-toggle');
+  if (!a) { box.innerHTML = '<div style="padding:14px 18px;font-family:var(--mono);font-size:10px;color:var(--ink3);">Select an account first.</div>'; return; }
+  const opts = [];
+  if (a.customerCost) opts.push({ key:'customer', tag:a.customerCostLabel, name:a.customerCostShort||a.label, desc:a.customerCostDesc, colour:a.color });
+  opts.push({ key:'internal', tag:'Internal Cost', name:'Internal', desc:`Internal cost<br>Extra approval ≥ $${a.threshold}/line`, colour:'var(--internal)' });
+  opts.push({ key:'capex', tag:'Capital Expenditure', name:'CapEx', desc:'Asset / long-life item<br>Finance + Sr. Director approval', colour:'var(--capex)' });
+
+  box.className = 'cost-toggle cols-' + opts.length;
+  box.innerHTML = opts.map(o => `
+    <label class="cost-opt${costType === o.key ? ' sel-on' : ''}" id="opt-${o.key}"
+           style="${costOverride ? 'cursor:pointer;' : 'cursor:default;'}"
+           ${costOverride ? `onclick="selectCost('${o.key}')"` : ''}>
+      <input type="radio" name="cost" value="${o.key}"${costType === o.key ? ' checked' : ''}>
+      <div class="cost-opt-inner" style="${costType === o.key ? `background:${o.colour};` : ''}">
+        <span class="cost-opt-tag" style="color:${costType === o.key ? '#fff' : o.colour};">${o.tag}</span>
+        <div class="cost-opt-name">${o.name}</div>
+        <span class="cost-opt-desc">${o.desc}</span>
+      </div>
+    </label>`).join('');
+
+  document.getElementById('capex-panel').style.display = costType === 'capex' ? 'block' : 'none';
+  document.getElementById('ticket-wrap').style.display   = (a.ticket && costType === 'customer') ? 'grid' : 'none';
+  if (a.ticket) {
+    const j = document.getElementById('ticket-id');
+    if (j) j.placeholder = a.ticketPlaceholder || '';
+    const jl = document.querySelector('#ticket-wrap label');
+    if (jl) jl.textContent = a.ticketLabel || 'Approval Ticket ID';
+  }
+  if (costType) { box.classList.remove('invalid'); document.getElementById('ferr-cost').classList.remove('show'); }
+}
+
+function selectCost(type) {
+  if (!costOverride) return;          // wizard owns the choice unless unlocked
+  costType = type;
+  renderCostOptions(); refreshPreview(); sched();
+}
+
+// ── INV toggle ──
+function toggleInv(id, type) {
+  const inv = document.getElementById('inv-btn-' + id);
+  const non = document.getElementById('noninv-btn-' + id);
+  const val = document.getElementById('inv-val-' + id);
+  if (!inv || !non || !val) return;
+  if (type === 'inv') {
+    inv.className = 'inv-btn active-inv'; non.className = 'inv-btn'; val.value = 'INV';
+  } else {
+    non.className = 'inv-btn active-noninv'; inv.className = 'inv-btn'; val.value = 'NON-INV';
+  }
+  sched();
+}
+
+// ── Line items ──
+function addLine(data = {}) {
+  lineCounter++;
+  const id = lineCounter;
+  const tbody = document.getElementById('lines-body');
+  const tr = document.createElement('tr');
+  tr.id = 'line-' + id;
+  tr.innerHTML = `
+    <td class="line-num-cell" id="lnum-${id}"></td>
+    <td><input type="number" min="1" value="${data.qty||1}" oninput="clampQty(this);calcTotal();sched();" onchange="clampQty(this);calcTotal();sched();" style="text-align:center;font-size:13px;"></td>
+    <td><input type="text" placeholder="IPN-XXXXXX" value="${esc(data.internalPn||'')}"></td>
+    <td><input type="text" placeholder="Vendor SKU" value="${esc(data.vendor||'')}"></td>
+    <td>
+      <input type="hidden" id="inv-val-${id}" value="${data.invType||''}">
+      <div class="inv-toggle">
+        <button type="button" class="inv-btn${data.invType==='INV'?' active-inv':''}" id="inv-btn-${id}" onclick="toggleInv(${id},'inv')">INV</button>
+        <button type="button" class="inv-btn${data.invType==='NON-INV'?' active-noninv':''}" id="noninv-btn-${id}" onclick="toggleInv(${id},'noninv')">NON</button>
+      </div>
+    </td>
+    <td><input type="text" placeholder="Full description and call outs…" value="${esc(data.desc||'')}"></td>
+    <td><input type="text" placeholder="Product page URL…" value="${esc(data.link||'')}" style="font-size:11px;color:var(--accent2);"></td>
+    <td><input type="number" min="0" step="0.01" placeholder="0.00" value="${data.unitCost||''}" oninput="calcTotal();refreshPreview();sched();" style="text-align:right;"></td>
+    <td><input type="text" placeholder="Why this item…" value="${esc(data.justification||'')}" style="font-size:11px;"></td>
+    <td class="flag-cell" id="flag-${id}">—</td>
+    <td style="text-align:center;white-space:nowrap;"><button class="dup-btn" onclick="duplicateLine(${id})" title="Duplicate row">⊕</button><button class="del-btn" onclick="removeLine(${id})" title="Remove row">×</button></td>
+  `;
+  tbody.appendChild(tr);
+  tr.querySelectorAll('input[type=text]').forEach(inp => inp.addEventListener('blur', sched));
+  const visInputs = Array.from(tr.querySelectorAll('input:not([type=hidden])'));
+  visInputs[visInputs.length - 1].addEventListener('keydown', function(e) {
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault();
+      addLineAndFocus();
+    }
+  });
+  calcTotal(); renumber();
+  return id;
+}
+function removeLine(id) {
+  const el = document.getElementById('line-' + id);
+  if (el) { el.remove(); calcTotal(); refreshPreview(); renumber(); sched(); }
+}
+function duplicateLine(id) {
+  const row = document.getElementById('line-' + id);
+  if (!row) return;
+  const vis = Array.from(row.querySelectorAll('input:not([type=hidden])'));
+  const data = {
+    qty: vis[0].value,
+    internalPn: vis[1].value,
+    vendor: vis[2].value,
+    invType: (row.querySelector('[id^="inv-val-"]') || {}).value || '',
+    desc: vis[3].value,
+    link: vis[4].value,
+    unitCost: vis[5].value,
+    justification: vis[6] ? vis[6].value : ''
+  };
+  const newId = addLine(data);
+  const newRow = document.getElementById('line-' + newId);
+  if (newRow) { const fi = newRow.querySelector('input:not([type=hidden])'); if (fi) fi.focus(); }
+}
+function addLineAndFocus() {
+  const id = addLine();
+  const row = document.getElementById('line-' + id);
+  if (row) { const fi = row.querySelector('input:not([type=hidden])'); if (fi) fi.focus(); }
+}
+function renumber() {
+  let i = 1;
+  document.querySelectorAll('#lines-body tr').forEach(tr => {
+    const n = tr.querySelector('[id^="lnum-"]');
+    if (n) n.textContent = i++;
+  });
+  const c = document.querySelectorAll('#lines-body tr').length;
+  document.getElementById('line-count').textContent = c ? `${c} item${c !== 1 ? 's' : ''}` : '';
+}
+function clampQty(el) { const v = parseInt(el.value, 10); if (!v || v < 1) el.value = 1; }
+
+// ── Quote file attachment ──
+let quoteAttachment = null;
+let quoteLoading = false;
+document.getElementById('quote-file').addEventListener('change', function() {
+  const file = this.files[0];
+  const label = document.getElementById('file-label');
+  const clear = document.getElementById('file-clear');
+  const ferr  = document.getElementById('ferr-quote-file');
+  if (!file) { quoteAttachment = null; quoteLoading = false; label.textContent = 'No file chosen'; label.classList.remove('has-file'); clear.style.display='none'; return; }
+  if (file.size > 5 * 1024 * 1024) {
+    ferr.textContent = 'File exceeds 5 MB — please compress or split the quote.';
+    ferr.classList.add('show');
+    this.value = ''; quoteAttachment = null; quoteLoading = false;
+    label.textContent = 'No file chosen'; label.classList.remove('has-file'); clear.style.display='none';
+    return;
+  }
+  ferr.classList.remove('show');
+  label.textContent = file.name; label.classList.add('has-file'); clear.style.display='';
+  quoteLoading = true; quoteAttachment = null;
+  const reader = new FileReader();
+  reader.onload = ev => { quoteAttachment = { name: file.name, content: ev.target.result.split(',')[1], type: file.type }; quoteLoading = false; };
+  reader.readAsDataURL(file);
+});
+function clearQuoteFile() {
+  document.getElementById('quote-file').value = '';
+  document.getElementById('file-label').textContent = 'No file chosen';
+  document.getElementById('file-label').classList.remove('has-file');
+  document.getElementById('file-clear').style.display = 'none';
+  document.getElementById('ferr-quote-file').classList.remove('show');
+  quoteAttachment = null;
+}
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function calcTotal() {
+  let total = 0, anyHigh = false;
+  const TH = lineThreshold();
+  document.querySelectorAll('#lines-body tr').forEach(tr => {
+    const ni = tr.querySelectorAll('input[type=number]');
+    if (ni.length < 2) return;
+    const qty = parseFloat(ni[0].value) || 0;
+    const unit = parseFloat(ni[1].value) || 0;
+    total += qty * unit;
+    const id = tr.id.replace('line-','');
+    const flag = document.getElementById('flag-' + id);
+    if (!flag) return;
+    if (unit >= TH) { flag.innerHTML = `<span class="flag-over">⚠ ≥$${TH}</span>`; anyHigh = true; }
+    else if (unit > 0) flag.innerHTML = '<span class="flag-ok">✓</span>';
+    else flag.textContent = '—';
+  });
+  document.getElementById('total-val').textContent = '$' + total.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const pill = document.getElementById('thresh-pill');
+  if (anyHigh) { pill.textContent = `⚠ Additional approval required for ≥$${TH} lines`; pill.className = 'threshold-pill show pill-warn'; }
+  else if (total > 0) { pill.textContent = '✓ No threshold breach'; pill.className = 'threshold-pill show pill-ok'; }
+  else pill.className = 'threshold-pill';
+  if (accountKey) evalWizard();   // CapEx value test depends on unit costs
+}
+
+// ── Paste modal ──
+function openPaste() { document.getElementById('paste-area').value = ''; document.getElementById('paste-preview').textContent = ''; document.getElementById('paste-modal').classList.add('show'); }
+function closePaste() { document.getElementById('paste-modal').classList.remove('show'); }
+function previewPaste() {
+  const rows = parsePaste(document.getElementById('paste-area').value.trim());
+  document.getElementById('paste-preview').textContent = rows.length ? `✓ ${rows.length} row${rows.length!==1?'s':''} ready to import.` : '';
+}
+function parsePaste(text) {
+  if (!text) return [];
+  return text.split(/\r?\n/).filter(l => l.trim()).map(line => {
+    const cols = line.includes('\t') ? line.split('\t') : csvSplit(line);
+    const invRaw = (cols[3]||'').trim().toUpperCase();
+    return {
+      qty:      parseFloat(cols[0]) || 1,
+      internalPn: (cols[1]||'').trim(),
+      vendor:   (cols[2]||'').trim(),
+      invType:  invRaw === 'INV' ? 'INV' : /non/i.test(invRaw) ? 'NON-INV' : '',
+      desc:     (cols[4]||'').trim(),
+      unitCost: parseFloat(String(cols[5]||'').replace(/[$,]/g,'')) || '',
+      justification: (cols[6]||'').trim()
+    };
+  });
+}
+function csvSplit(line) {
+  const r = []; let cur = '', inQ = false;
+  for (const c of line) {
+    if (c === '"') { inQ = !inQ; continue; }
+    if (c === ',' && !inQ) { r.push(cur); cur = ''; continue; }
+    cur += c;
+  }
+  r.push(cur); return r;
+}
+function importPasted() {
+  const rows = parsePaste(document.getElementById('paste-area').value.trim());
+  if (!rows.length) { closePaste(); return; }
+  rows.forEach(r => addLine(r));
+  calcTotal(); refreshPreview(); closePaste();
+  toast(`${rows.length} line${rows.length!==1?'s':''} imported`, 'success'); sched();
+}
+
+// ── Approval preview ──
+function refreshPreview() {
+  const mgrName  = document.getElementById('mgr-name').value.trim()  || 'Dept. Manager';
+  const mgrEmail = document.getElementById('mgr-email').value.trim() || 'manager@example.com';
+  const requester = document.getElementById('req-by').value.trim()   || 'Requester';
+  let anyHigh = false;
+  document.querySelectorAll('#lines-body tr').forEach(tr => {
+    const ni = tr.querySelectorAll('input[type=number]');
+    if (ni.length >= 2 && parseFloat(ni[1].value) >= lineThreshold()) anyHigh = true;
+  });
+  const chain = document.getElementById('ap-chain');
+  const a = acct();
+  if (!a) {
+    chain.innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--ink3);padding:12px 0;">Select an account at the top of the form to see your approval chain.</div>';
+    return;
+  }
+  if (!costType) {
+    chain.innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--ink3);padding:12px 0;">Answer the classification questions to see your approval chain.</div>';
+    return;
+  }
+  const TH = a.threshold, buyer = a.purchaser;
+  const rows = [
+    { dot:'d-you', role:'Requester', who: requester, note:`Submits this PR for the ${a.label} account.`, badge: null }
+  ];
+  if (a.routing === 'purchaser') {
+    rows.push({ dot:'d-buyer', role:`Buyer review — ${buyer.name}`, who: buyer.email, note:'Confirms vendor, pricing and part numbers, then forwards to the approving manager. May send it back to you if something is unclear.', badge:{cls:'b-auto',text:'first stop'} });
+    rows.push({ dot:'d-mgr', role:'Approving manager', who:`${mgrName} · ${mgrEmail}`, note:'Approves or rejects with a reason. A rejection comes back to you and the buyer.', badge:{cls:'b-email',text:'approve / reject'} });
+  } else {
+    rows.push({ dot:'d-mgr', role:'Approving manager', who:`${mgrName} · ${mgrEmail}`, note:'Emailed on submission. Approves or rejects with a reason before the PO is created.', badge:{cls:'b-auto',text:'auto-emailed on submit'} });
+  }
+  if (costType === 'capex') {
+    rows.push({ dot:'d-dir', role:'Sr. Director of Operations', who:'Sr. Director — Operations', note:'All CapEx requests require Sr. Director sign-off regardless of line value.', badge:{cls:'b-email',text:'email approval'} });
+    rows.push({ dot:'d-appr', role:'Finance — CapEx approval', who:'Finance team', note:`CapEx hits the balance sheet. Finance must confirm classification and approve before the PO is created. Attach the completed CapEx Excel to the submitted PR email.`, badge:{cls:'b-ticket',text:'capex form required'} });
+  } else if (anyHigh && costType === 'customer' && a.ticket) {
+    rows.push({ dot:'d-appr', role:`${a.label} — ticket approval`, who:`${a.label} procurement team`, note:`Approval ticket raised by ${buyer.name} for all line items ≥ $${TH}. Ticket # referenced on the PO.`, badge:{cls:'b-ticket',text:'approval ticket'} });
+  } else if (anyHigh) {
+    rows.push({ dot:'d-dir', role:'Sr. Director of Operations', who:'Sr. Director — Operations', note:`Email approval required for lines ≥ $${TH} before the PO is created.`, badge:{cls:'b-email',text:'email approval'} });
+  } else {
+    rows.push({ dot:'d-buyer', role:'No threshold approver required', who:`All lines under $${TH}`, note:`No additional approval step. ${buyer.name} proceeds to PO creation once the manager approves.`, badge:{cls:'b-auto',text:'clear to proceed'} });
+  }
+  rows.push({ dot:'d-buyer', role:`Sr. Buyer — ${buyer.name}`, who: buyer.email, note:'Creates PO in the ERP. PO approval chain auto-triggered by the ERP based on PO value.', badge: null });
+  rows.push({ dot:'d-ok',    role:'PO released to vendor',   who:'After full ERP approval chain', note:`${buyer.name} releases the PO and sends vendor confirmation.`, badge:{cls:'b-auto',text:'monitored'} });
+
+  const dotMap = {'d-you':'YOU','d-mgr':'MGR','d-appr':'APR','d-dir':'DIR','d-buyer':'BUY','d-ok':'✓'};
+  chain.innerHTML = rows.map(r => `
+    <div class="ap-row">
+      <div class="ap-dot ${r.dot}">${dotMap[r.dot]||'•'}</div>
+      <div class="ap-body">
+        <div class="ap-role">${r.role}</div>
+        <div class="ap-who">${r.who}</div>
+        <div class="ap-note">${r.note}</div>
+        ${r.badge ? `<span class="ap-badge ${r.badge.cls}">${r.badge.text}</span>` : ''}
+      </div>
+    </div>`).join('');
+}
+function updateSubmitBar() {
+  const n = document.getElementById('mgr-name').value.trim();
+  const e = document.getElementById('mgr-email').value.trim();
+  document.getElementById('submit-mgr').textContent = (n && e) ? n + ' (' + e + ')' : n || e || 'your manager';
+  const a = acct(); if (!a) return;
+  const buyer = a.purchaser.name;
+  setTxt('submit-buyer', buyer);
+  setTxt('capex-buyer-1', buyer);
+  setTxt('capex-buyer-2', buyer);
+  // Step-card copy follows the account's routing rules
+  if (a.routing === 'purchaser') {
+    setTxt('wf1-title', 'Buyer reviews, then manager approves');
+    setTxt('wf1-body', `On submission this goes to ${buyer} first to confirm vendor and pricing, then to your approving manager. You are kept on copy throughout.`);
+  } else {
+    setTxt('wf1-title', 'Manager approves');
+    setTxt('wf1-body', `Email sent to your approving manager on submission. You and ${buyer} are CC'd. The manager approves or rejects with a reason.`);
+  }
+  setTxt('wf2-body', `${a.customerCost && a.ticket ? `${a.customerCostLabel} lines ≥ $${a.threshold} require an approval ticket. ` : ''}Internal lines ≥ $${a.threshold} require Sr. Director email. CapEx requires Finance sign-off.`);
+  setTxt('wf3-body', `${buyer} raises the PO once all approvals are confirmed. The ERP triggers its own PO approval chain based on value.`);
+}
+function setTxt(id, t) { const el = document.getElementById(id); if (el) el.textContent = t; }
+
+// ── Validation ──
+function setErr(id, msg) {
+  const el = document.getElementById(id); if (el) el.classList.add('invalid');
+  const fe = document.getElementById('ferr-' + id); if (fe) { if(msg) fe.textContent = msg; fe.classList.add('show'); }
+}
+function clearErr(id) {
+  const el = document.getElementById(id); if (el) el.classList.remove('invalid');
+  const fe = document.getElementById('ferr-' + id); if (fe) fe.classList.remove('show');
+}
+function validate() {
+  let ok = true;
+  if (!accountKey) {
+    document.getElementById('acct-gate').classList.add('invalid');
+    document.getElementById('ferr-acct').classList.add('show');
+    document.getElementById('acct-gate').scrollIntoView({ behavior:'smooth', block:'center' });
+    return false;                      // nothing else can be validated without an account
+  }
+  const checks = [['req-by','Please enter your name.'],['req-dept','Please select your department.'],
+   ['req-email','Please enter your email address.'],['req-delivery','Please enter a delivery date.'],
+   ['mgr-select','Please select your approving manager.'],['ship-site','Please select the delivery site.'],
+   ['reason','Please provide a reason for this request.']];
+  if (document.getElementById('mgr-select').value === 'other') {
+    checks.push(['mgr-name',"Please enter your manager's name."], ['mgr-email','Please enter a valid manager email.']);
+  }
+  checks.forEach(([id, msg]) => {
+    const el = document.getElementById(id);
+    if (!el?.value.trim()) { setErr(id, msg); ok = false; } else clearErr(id);
+  });
+  const av = acct();
+  const catDef = WIZ_CATS.find(c => c.id === wizState.cat);
+  let wizMsg = '';
+  if (!wizState.cat) wizMsg = 'Please pick a category.';
+  else if (catDef.force === 'ask' && !wizState.life) wizMsg = 'Please answer whether this lasts more than 12 months.';
+  else if (av.customerCost && !wizState.who) wizMsg = 'Please answer who bears the cost.';
+  if (wizMsg) { setErr('wiz', wizMsg); ok = false; } else clearErr('wiz');
+  const re = document.getElementById('req-email');
+  if (re?.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(re.value)) { setErr('req-email','Enter a valid email address.'); ok = false; }
+  const em = document.getElementById('mgr-email');
+  if (em?.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.value)) { setErr('mgr-email','Enter a valid email address.'); ok = false; }
+  if (!costType) {
+    document.getElementById('cost-toggle').classList.add('invalid');
+    document.getElementById('ferr-cost').classList.add('show');
+    ok = false;
+  }
+  const lc = document.querySelectorAll('#lines-body tr').length;
+  const le = document.getElementById('ferr-lines');
+  if (!lc) { if(le){ le.classList.add('show'); } ok = false; } else { if(le) le.classList.remove('show'); }
+  if (!ok) {
+    const first = document.querySelector('.invalid, .ferr.show');
+    if (first) first.scrollIntoView({ behavior:'smooth', block:'center' });
+  }
+  return ok;
+}
+
+// ── Review modal ──
+function openReview() {
+  if (!validate()) return;
+  document.getElementById('review-body').innerHTML = buildReview(collectFormData());
+  document.getElementById('review-modal').classList.add('show');
+}
+function closeReview() { document.getElementById('review-modal').classList.remove('show'); }
+
+function buildReview(d) {
+  const urgLbl = {standard:'Standard — 3 days to place order + shipping',urgent:'Urgent — order placed within 1 day + shipping',critical:'Critical — order placed ASAP + shipping, production impacted'};
+  const overLines = d.lineItems.filter(l => l.overThreshold);
+  const linesHtml = d.lineItems.map((l, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td style="text-align:center;">${l.qty}</td>
+      <td style="font-family:var(--mono);font-size:10px;">${l.internalPartNo||'—'}</td>
+      <td style="font-family:var(--mono);font-size:10px;">${l.vendorPartNo||'—'}</td>
+      <td><span style="font-family:var(--mono);font-size:8px;background:${l.invType==='INV'?'var(--accent2)':l.invType?'var(--amber)':'#eee'};color:${l.invType?'#fff':'var(--ink3)'};padding:2px 6px;border-radius:2px;">${l.invType||'—'}</span></td>
+      <td style="max-width:180px;word-break:break-word;">${l.description||'—'}</td>
+      <td style="max-width:140px;font-size:10px;word-break:break-all;">${l.link?`<a href="${l.link.startsWith('http')?l.link:'https://'+l.link}" style="color:var(--accent2);" target="_blank">${l.link}</a>`:'—'}</td>
+      <td style="text-align:right;font-family:var(--mono);">$${l.unitCost.toFixed(2)}</td>
+      <td style="text-align:right;font-family:var(--mono);font-weight:600;">$${l.lineTotal.toFixed(2)}</td>
+      <td style="max-width:150px;word-break:break-word;font-size:10px;color:var(--ink3);">${l.justification||'—'}</td>
+      <td>${l.overThreshold?'<span style="color:var(--accent);font-size:10px;">⚠</span>':''}</td>
+    </tr>`).join('');
+  const capexWarn = d.isCapex ? `<div class="rv-warn" style="border-color:#a8d5c2;background:#f0f8f4;color:var(--capex);">This is a CapEx request. After submitting, reply to the PR email with the completed CapEx Excel template attached. No PO will be raised until Finance approval is confirmed.</div>` : '';
+  const ticketRoute = d.approvalRoute === 'ticket_customer';
+  const warnHtml = overLines.length && !d.isCapex ? `<div class="rv-warn">⚠ ${overLines.length} line item${overLines.length>1?'s':''} at ≥$${d.lineThreshold} — ${ticketRoute?`Approval ticket required (raised by ${d.purchaser.name}).`:'Sr. Director of Operations approval required by email.'}</div>` : '';
+  const route = d.needsExtraApproval ? (ticketRoute?`${d.accountLabel} ticket approval required for ≥$${d.lineThreshold} lines`:`Sr. Director email approval required for ≥$${d.lineThreshold} lines`) : 'No threshold approval — direct to buyer after manager approval';
+  const vendorBlock = (d.vendor.name||d.vendor.contact||d.vendor.quoteRef) ? `
+    <div class="rv-section"><div class="rv-title">Preferred vendor</div>
+    <div class="rv-grid rv-grid-3">
+      <div class="rv-item"><div class="rv-lbl">Vendor</div><div class="rv-val">${d.vendor.name||'—'}</div></div>
+      <div class="rv-item"><div class="rv-lbl">Contact</div><div class="rv-val">${d.vendor.contact||'—'}</div></div>
+      <div class="rv-item"><div class="rv-lbl">Quote ref</div><div class="rv-val">${d.vendor.quoteRef||'—'}</div></div>
+    </div></div>` : '';
+  return `
+    <div class="rv-section"><div class="rv-title">Reference &amp; requester</div>
+      <div class="rv-grid">
+        <div class="rv-item"><div class="rv-lbl">PR Reference</div><div class="rv-val" style="font-family:var(--mono);">${refId}</div></div>
+        <div class="rv-item"><div class="rv-lbl">Date</div><div class="rv-val">${d.requester.dateSubmitted}</div></div>
+        <div class="rv-item"><div class="rv-lbl">Requested by</div><div class="rv-val">${d.requester.name}</div></div>
+        <div class="rv-item"><div class="rv-lbl">Department</div><div class="rv-val ${!d.requester.department?'empty':''}">${d.requester.department||'Not provided'}</div></div>
+        <div class="rv-item"><div class="rv-lbl">Email</div><div class="rv-val ${!d.requester.email?'empty':''}">${d.requester.email||'Not provided'}</div></div>
+        <div class="rv-item"><div class="rv-lbl">Delivery required</div><div class="rv-val">${d.requester.deliveryRequired}</div></div>
+        <div class="rv-item"><div class="rv-lbl">Manager</div><div class="rv-val">${d.manager.name}</div></div>
+        <div class="rv-item"><div class="rv-lbl">Manager email</div><div class="rv-val" style="font-family:var(--mono);font-size:12px;">${d.manager.email}</div></div>
+      </div>
+    </div>
+    <div class="rv-section"><div class="rv-title">Classification</div>
+      <div class="rv-grid">
+        <div class="rv-item"><div class="rv-lbl">Account</div><div class="rv-val">${d.accountLabel}</div></div>
+        <div class="rv-item"><div class="rv-lbl">Cost type</div><div class="rv-val"><span class="cost-badge ${d.isCapex?'capex':d.costType==='internal'?'internal':'cust'}">${d.costTypeLabel}</span>${d.isCapex?'<span style="font-family:var(--mono);font-size:9px;background:var(--capex);color:#fff;padding:2px 8px;border-radius:2px;margin-left:8px;letter-spacing:.08em;">CAPEX FORM REQUIRED</span>':''}${d.costTypeSetManually?'<span style="font-family:var(--mono);font-size:9px;color:var(--amber);margin-left:8px;">set manually</span>':''}</div></div>
+        <div class="rv-item"><div class="rv-lbl">Ship to / site</div><div class="rv-val">${d.shipTo||'—'}</div></div>
+        <div class="rv-item"><div class="rv-lbl">Urgency</div><div class="rv-val">${urgLbl[d.urgency]||d.urgency}</div></div>
+        <div class="rv-item"><div class="rv-lbl">Program</div><div class="rv-val ${!d.program?'empty':''}">${d.program||'Not specified'}</div></div>
+        <div class="rv-item"><div class="rv-lbl">Approval route</div><div class="rv-val" style="font-size:11px;color:var(--ink3);">${route}</div></div>
+        ${d.costType==='customer'&&d.ticketId!==undefined&&ACCOUNTS[d.account]&&ACCOUNTS[d.account].ticket?`<div class="rv-item"><div class="rv-lbl">Approval Ticket</div><div class="rv-val" style="font-family:var(--mono);font-size:12px;">${d.ticketId||`<span style="color:#ccc;font-style:italic;font-size:11px;">To be raised by ${d.purchaser.name}</span>`}</div></div>`:''}
+
+        <div class="rv-item" style="grid-column:1/-1;"><div class="rv-lbl">Reason</div><div class="rv-val" style="font-size:12px;line-height:1.6;font-weight:400;color:var(--ink2);">${d.reason}</div></div>
+      </div>
+    </div>
+    <div class="rv-section"><div class="rv-title">Line items (${d.lineItems.length})</div>
+      <div style="overflow-x:auto;">
+        <table class="rv-lines">
+          <thead><tr><th>#</th><th>Qty</th><th>Internal PN</th><th>Vendor PN</th><th>Type</th><th>Description</th><th>Link</th><th>Unit $</th><th>Line Total</th><th>Justification</th><th></th></tr></thead>
+          <tbody>${linesHtml}</tbody>
+        </table>
+      </div>
+      <div class="rv-total"><span class="rv-total-lbl">Grand Total</span><span class="rv-total-val">$${d.totalValue.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span></div>
+      ${capexWarn}${warnHtml}
+    </div>
+    ${vendorBlock}`;
+}
+
+// ── Collect form data ──
+function collectFormData() {
+  const a = acct();
+  const lines = [];
+  document.querySelectorAll('#lines-body tr').forEach(tr => {
+    const ti = tr.querySelectorAll('input[type=text]');
+    const ni = tr.querySelectorAll('input[type=number]');
+    const hid = tr.querySelector('input[type=hidden]');
+    if (ni.length < 2) return;
+    const qty = parseFloat(ni[0].value) || 0;
+    const unitCost = parseFloat(ni[1].value) || 0;
+    lines.push({ internalPartNo: ti[0]?.value||'', vendorPartNo: ti[1]?.value||'',
+                 invType: hid?.value||'', description: ti[2]?.value||'', link: ti[3]?.value||'',
+                 justification: ti[4]?.value||'', qty, unitCost,
+                 lineTotal: parseFloat((qty*unitCost).toFixed(2)), overThreshold: unitCost >= lineThreshold() });
+  });
+  const totalValue = lines.reduce((a,b) => a + b.lineTotal, 0);
+  const needsExtra = lines.some(l => l.overThreshold);
+  const data = {
+    refId, submittedAt: new Date().toISOString(),
+    requester: { name: g('req-by'), department: g('req-dept'), email: g('req-email'), dateSubmitted: g('req-date'), deliveryRequired: g('req-delivery') },
+    manager:   { name: g('mgr-name'), email: g('mgr-email') },
+    account:   accountKey,
+    accountLabel: a ? a.label : '',
+    costType, costTypeLabel: costLabelFor(costType),
+    costTypeSetManually: costOverride,
+    classification: { category: wizState.cat, overTwelveMonths: wizState.life, costBearer: wizState.who },
+    shipTo: g('ship-site'),
+    urgency: g('urgency'), program: g('program-global'), reason: g('reason'), ticketId: g('ticket-id'),
+    vendor:    { name: g('vendor-name'), contact: g('vendor-contact'), quoteRef: g('vendor-ref') },
+    lineItems: lines, totalValue: parseFloat(totalValue.toFixed(2)), needsExtraApproval: needsExtra,
+    lineThreshold: a ? a.threshold : 200,
+    routing: a ? a.routing : 'manager',
+    approvalRoute: needsExtra ? (costType === 'customer' && a && a.ticket ? 'ticket_customer' : 'sr_director_email') : 'direct_to_buyer',
+    purchaser: a ? a.purchaser : { name:'Buyer (Demo)', email:'buyer@example.com' },
+    buyerEmail: a ? a.purchaser.email : 'buyer@example.com',
+    status: 'Submitted',
+    isCapex: costType === 'capex'
+  };
+  // Flat scalar mirror — maps 1:1 onto list columns / workflow fields
+  data.flat = {
+    PRNumber: refId,
+    Account: data.accountLabel,
+    Status: 'Submitted',
+    RequesterName: data.requester.name,
+    RequesterEmail: data.requester.email,
+    Department: data.requester.department,
+    ApproverName: data.manager.name,
+    ApproverEmail: data.manager.email,
+    PurchaserEmail: data.buyerEmail,
+    CostType: data.costTypeLabel,
+    IsCapex: data.isCapex,
+    ShipTo: data.shipTo,
+    Program: data.program,
+    TicketId: data.ticketId,
+    Urgency: data.urgency,
+    DeliveryBy: data.requester.deliveryRequired,
+    TotalValue: data.totalValue,
+    LineCount: lines.length,
+    NeedsExtraApproval: needsExtra,
+    Routing: data.routing,
+    Reason: data.reason,
+    SubmittedAt: data.submittedAt
+  };
+  data.quote = quoteAttachment || null;
+  data.emailSubject = (data.isCapex ? '[CAPEX] ' : '') + 'New PR - ' + data.refId + ' - ' + data.requester.name;
+  data.emailHtml = buildEmailHtml(data);
+  return data;
+}
+function g(id) { return (document.getElementById(id)?.value||'').trim(); }
+
+// ── HTML Email builder (sent via payload to Power Automate) ──
+function buildEmailHtml(d) {
+  const urgLbl = { standard:'Standard — 3 days to place order + shipping', urgent:'Urgent — order placed within 1 day + shipping', critical:'Critical — order placed ASAP + shipping, production impacted' };
+  const costLbl = d.costTypeLabel;
+  const ticketRoute = d.approvalRoute === 'ticket_customer';
+  const routeLbl = d.isCapex
+    ? 'CapEx: Sr. Director + Finance approval required'
+    : d.needsExtraApproval
+      ? (ticketRoute ? `${d.accountLabel} ticket approval required for lines ≥ $${d.lineThreshold}, then Buyer creates PO` : `Sr. Director email approval required for lines ≥ $${d.lineThreshold}, then Buyer creates PO`)
+      : 'No threshold breach — direct to Buyer after Manager approval';
+  const capexBanner = d.isCapex ? `<div style="background:#b91c1c;color:#fff;padding:16px 20px;border-radius:6px;margin-bottom:20px;font-family:'Segoe UI',Arial,sans-serif;"><strong>⚠ ACTION REQUIRED — CAPEX REQUEST</strong><br>Attach your completed CapEx Excel template to this email. No PO can be raised without it.</div>` : '';
+  const ticketRow = (d.costType === 'customer' && ACCOUNTS[d.account] && ACCOUNTS[d.account].ticket) ? `<tr><td style="padding:4px 16px 4px 0;color:#6b7280;white-space:nowrap;">Ticket ID</td><td>${d.ticketId || '(to be raised)'}</td></tr>` : '';
+  let lineRows = '';
+  d.lineItems.forEach((l, i) => {
+    const bg = l.overThreshold ? '#fff7ed' : (i % 2 === 0 ? '#f9fafb' : '#ffffff');
+    const flag = l.overThreshold ? `<br><span style="color:#b45309;font-size:11px;font-weight:700;">⚠ OVER $${d.lineThreshold} THRESHOLD</span>` : '';
+    const lnk = l.link ? `<a href="${l.link}" style="color:#1d4ed8;text-decoration:none;">View</a>` : '—';
+    lineRows += `<tr style="background:${bg};"><td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;">${i+1}</td><td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;">${l.description||'—'}${flag}</td><td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;">${l.internalPartNo||'—'}</td><td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;">${l.vendorPartNo||'—'}</td><td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;">${l.invType||'—'}</td><td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:center;">${l.qty}</td><td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:right;">$${l.unitCost.toFixed(2)}</td><td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:right;font-weight:700;">$${l.lineTotal.toFixed(2)}</td><td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280;">${l.justification||'—'}</td><td style="padding:8px 10px;border-bottom:1px solid #e5e7eb;text-align:center;">${lnk}</td></tr>`;
+  });
+  let vendorSection = '';
+  if (d.vendor.name || d.vendor.contact || d.vendor.quoteRef) {
+    vendorSection = `<div style="margin-top:24px;"><div style="font-size:13px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e5e7eb;padding-bottom:6px;margin-bottom:12px;">Preferred Vendor</div><table style="font-size:14px;color:#374151;">${d.vendor.name?`<tr><td style="padding:3px 16px 3px 0;color:#6b7280;">Name</td><td>${d.vendor.name}</td></tr>`:''} ${d.vendor.contact?`<tr><td style="padding:3px 16px 3px 0;color:#6b7280;">Contact</td><td>${d.vendor.contact}</td></tr>`:''} ${d.vendor.quoteRef?`<tr><td style="padding:3px 16px 3px 0;color:#6b7280;">Quote Ref</td><td>${d.vendor.quoteRef}</td></tr>`:''}</table></div>`;
+  }
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;font-size:14px;color:#374151;"><div style="max-width:720px;margin:24px auto;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);"><div style="background:#1e3a5f;padding:24px 28px;"><div style="color:#fff;font-size:20px;font-weight:700;letter-spacing:.02em;">Purchase Requisition</div><div style="color:#93c5fd;font-size:13px;margin-top:4px;">Demo &nbsp;·&nbsp; ${d.accountLabel} &nbsp;·&nbsp; ${d.refId}</div></div><div style="padding:24px 28px;">${capexBanner}<table style="width:100%;margin-bottom:24px;"><tr><td style="width:50%;vertical-align:top;"><div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid #e5e7eb;padding-bottom:6px;margin-bottom:12px;">Requester</div><table style="font-size:14px;color:#374151;"><tr><td style="padding:4px 16px 4px 0;color:#6b7280;white-space:nowrap;">Name</td><td><strong>${d.requester.name}</strong></td></tr><tr><td style="padding:4px 16px 4px 0;color:#6b7280;white-space:nowrap;">Department</td><td>${d.requester.department||'—'}</td></tr><tr><td style="padding:4px 16px 4px 0;color:#6b7280;white-space:nowrap;">Email</td><td>${d.requester.email||'—'}</td></tr><tr><td style="padding:4px 16px 4px 0;color:#6b7280;white-space:nowrap;">Date</td><td>${d.requester.dateSubmitted}</td></tr><tr><td style="padding:4px 16px 4px 0;color:#6b7280;white-space:nowrap;">Delivery By</td><td><strong>${d.requester.deliveryRequired}</strong></td></tr><tr><td style="padding:4px 16px 4px 0;color:#6b7280;white-space:nowrap;">Urgency</td><td>${urgLbl[d.urgency]||d.urgency}</td></tr></table></td><td style="width:50%;vertical-align:top;padding-left:24px;"><div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid #e5e7eb;padding-bottom:6px;margin-bottom:12px;">Cost &amp; Approval</div><table style="font-size:14px;color:#374151;"><tr><td style="padding:4px 16px 4px 0;color:#6b7280;white-space:nowrap;">Account</td><td><strong>${d.accountLabel}</strong></td></tr><tr><td style="padding:4px 16px 4px 0;color:#6b7280;white-space:nowrap;">Cost Type</td><td><strong>${costLbl}</strong></td></tr>${ticketRow}<tr><td style="padding:4px 16px 4px 0;color:#6b7280;white-space:nowrap;">Program</td><td>${d.program||'—'}</td></tr><tr><td style="padding:4px 16px 4px 0;color:#6b7280;white-space:nowrap;">Ship To</td><td><strong>${d.shipTo||'—'}</strong></td></tr><tr><td style="padding:4px 16px 4px 0;color:#6b7280;white-space:nowrap;">Manager</td><td>${d.manager.name||'—'}<br><span style="color:#6b7280;font-size:12px;">${d.manager.email||''}</span></td></tr><tr><td style="padding:4px 16px 4px 0;color:#6b7280;white-space:nowrap;">Route</td><td style="font-size:12px;">${routeLbl}</td></tr></table></td></tr></table><div style="margin-bottom:20px;"><div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid #e5e7eb;padding-bottom:6px;margin-bottom:10px;">Reason</div><div style="font-size:14px;">${d.reason||'—'}</div></div><div><div style="font-size:12px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid #e5e7eb;padding-bottom:6px;margin-bottom:0;">Line Items</div><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:#1e3a5f;color:#fff;"><th style="padding:9px 10px;text-align:left;font-weight:600;">#</th><th style="padding:9px 10px;text-align:left;font-weight:600;">Description</th><th style="padding:9px 10px;text-align:left;font-weight:600;">Internal PN</th><th style="padding:9px 10px;text-align:left;font-weight:600;">Vendor PN</th><th style="padding:9px 10px;text-align:left;font-weight:600;">Type</th><th style="padding:9px 10px;text-align:center;font-weight:600;">Qty</th><th style="padding:9px 10px;text-align:right;font-weight:600;">Unit Cost</th><th style="padding:9px 10px;text-align:right;font-weight:600;">Total</th><th style="padding:9px 10px;text-align:left;font-weight:600;">Justification</th><th style="padding:9px 10px;text-align:center;font-weight:600;">Link</th></tr></thead><tbody>${lineRows}</tbody><tfoot><tr style="background:#1e3a5f;color:#fff;"><td colspan="7" style="padding:10px;font-weight:700;text-align:right;">Grand Total</td><td style="padding:10px;font-weight:700;text-align:right;">$${d.totalValue.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td><td></td><td></td></tr></tfoot></table></div>${vendorSection}</div><div style="background:#f9fafb;padding:14px 28px;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280;">Sent via Purchase Request Portal (Demo) &nbsp;·&nbsp; ${d.accountLabel} account &nbsp;·&nbsp; Buyer: ${d.purchaser.name} &nbsp;·&nbsp; <a href="mailto:${d.purchaser.email}" style="color:#1d4ed8;">${d.purchaser.email}</a></div></div></body></html>`;
+}
+
+// ── Email body builder ──
+function buildEmailBody(d) {
+  const urgLbl = { standard:'Standard — 3 days to place order + shipping', urgent:'Urgent — order placed within 1 day + shipping', critical:'Critical — order placed ASAP + shipping, production impacted' };
+  const routeLbl = d.isCapex
+    ? 'CAPEX: Sr. Director + Finance approval required | No PO until CapEx Excel received and approved'
+    : d.needsExtraApproval
+      ? (d.approvalRoute === 'ticket_customer' ? d.accountLabel + ' ticket approval required for lines >= $' + d.lineThreshold + ', then Buyer creates PO' : 'Sr. Director email approval required for lines >= $' + d.lineThreshold + ', then Buyer creates PO')
+      : 'No threshold breach - direct to Buyer after Manager approval';
+  const capexBanner = d.isCapex ? [
+    '!'.repeat(56),
+    '  ACTION REQUIRED -- ATTACH FILE BEFORE CLICKING SEND',
+    '!'.repeat(56),
+    '',
+    '  This is a CAPITAL EXPENDITURE (CapEx) request.',
+    '',
+    '  BEFORE YOU CLICK SEND:',
+    '  Attach your completed CapEx Excel template to this email.',
+    '',
+    '  No PO can be raised without the CapEx form.',
+    '  Finance approval is required before ' + d.purchaser.name + ' can proceed.',
+    '',
+    '!'.repeat(56),
+    ''
+  ].join('\n') : '';
+  const LINE  = '-'.repeat(56);
+  const DLINE = '='.repeat(56);
+
+  let lineBlock = 'LINE ITEMS (' + d.lineItems.length + ')\n' + LINE + '\n';
+  d.lineItems.forEach((l, i) => {
+    lineBlock += '\n' + (i + 1) + '. ' + (l.description || '(no description)') + '\n';
+    const parts = ['Qty: ' + l.qty];
+    if (l.program)       parts.push('Program: ' + l.program);
+    if (l.internalPartNo) parts.push('Internal PN: ' + l.internalPartNo);
+    if (l.vendorPartNo)  parts.push('Vendor PN: ' + l.vendorPartNo);
+    if (l.invType)       parts.push(l.invType);
+    lineBlock += '   ' + parts.join(' | ') + '\n';
+    lineBlock += '   Unit Cost: $' + l.unitCost.toFixed(2) + ' | Line Total: $' + l.lineTotal.toFixed(2);
+    if (l.overThreshold) lineBlock += '  ** OVER $' + d.lineThreshold + ' THRESHOLD **';
+    lineBlock += '\n';
+    if (l.justification) lineBlock += '   Justification: ' + l.justification + '\n';
+    if (l.link) lineBlock += '   Link: ' + l.link + '\n';
+  });
+
+  let vendorBlock = '';
+  if (d.vendor.name || d.vendor.contact || d.vendor.quoteRef) {
+    vendorBlock = '\nPREFERRED VENDOR\n' + LINE + '\n';
+    if (d.vendor.name)     vendorBlock += 'Vendor    : ' + d.vendor.name + '\n';
+    if (d.vendor.contact)  vendorBlock += 'Contact   : ' + d.vendor.contact + '\n';
+    if (d.vendor.quoteRef) vendorBlock += 'Quote Ref : ' + d.vendor.quoteRef + '\n';
+  }
+
+  return [
+    capexBanner + 'PURCHASE REQUISITION -- DEMO',
+    DLINE,
+    'PR Reference : ' + d.refId,
+    'Date         : ' + d.requester.dateSubmitted,
+    'Submitted by : ' + d.requester.name + (d.requester.department ? ', ' + d.requester.department : '') + (d.requester.email ? ' | ' + d.requester.email : ''),
+    'Delivery by  : ' + d.requester.deliveryRequired,
+    'Urgency      : ' + (urgLbl[d.urgency] || d.urgency),
+    '',
+    'COST & REQUEST DETAILS',
+    LINE,
+    'Account      : ' + d.accountLabel,
+    'Cost Type    : ' + d.costTypeLabel + ((d.costType === 'customer' && ACCOUNTS[d.account] && ACCOUNTS[d.account].ticket) ? '\nTicket ID    : ' + (d.ticketId || '(to be raised by ' + d.purchaser.name + ')') : ''),
+    'Program      : ' + (d.program || '--'),
+    'Ship To      : ' + (d.shipTo || '--'),
+    'Reason       : ' + d.reason,
+    '',
+    lineBlock,
+    LINE,
+    'GRAND TOTAL  : $' + d.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    LINE,
+    vendorBlock,
+    'APPROVAL ROUTE',
+    LINE,
+    'Manager      : ' + d.manager.name + ' | ' + d.manager.email,
+    'Route        : ' + routeLbl,
+    'Buyer        : ' + d.purchaser.name + ' | ' + d.purchaser.email,
+    '',
+    LINE,
+    'Sent via Purchase Request Portal (Demo)'
+  ].join('\n');
+}
+
+function launchMailto(d) {
+  const subject = (d.isCapex ? '[CAPEX] ' : '') + 'New PR - ' + d.refId + ' - ' + d.requester.name;
+  const body    = buildEmailBody(d);
+  const cc      = d.manager.email || '';
+  let uri = 'mailto:' + d.purchaser.email + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+  if (cc) uri += '&cc=' + encodeURIComponent(cc);
+  window.location.href = uri;
+}
+
+// ── Submit ──
+async function confirmSubmit() {
+  if (quoteLoading) { toast('Quote file is still loading — please wait a moment and try again.', 'warn'); return; }
+  const btn = document.getElementById('confirm-btn');
+  btn.textContent = 'Submitting…'; btn.disabled = true;
+  const payload = collectFormData();
+  const live = POWER_AUTOMATE_URL.startsWith('http');
+  if (live) {
+    try {
+      const resp = await fetch(POWER_AUTOMATE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!resp.ok) {
+        const errBody = await resp.text().catch(() => '');
+        btn.textContent = 'Confirm & Submit ↗'; btn.disabled = false;
+        console.error('Power Automate error', resp.status, errBody);
+        toast(`Submission failed — HTTP ${resp.status}. Open browser console (F12) and check the error for details.`, 'warn');
+        return;
+      }
+    } catch (e) {
+      btn.textContent = 'Confirm & Submit ↗'; btn.disabled = false;
+      toast('Submission failed — could not reach Power Automate. Check your connection or contact the form owner.', 'warn');
+      console.error('Fetch error:', e);
+      return;
+    }
+  } else {
+    console.log('=== PR PAYLOAD (demo — not sent) ===');
+    console.log(JSON.stringify(payload, null, 2));
+    toast('Demo — nothing was sent. Payload logged to the browser console.', 'info');
+  }
+  closeReview();
+  localStorage.removeItem(DRAFT_KEY);
+  document.querySelectorAll('.card, #submit-bar').forEach(el => el.style.display = 'none');
+  const s = document.getElementById('success');
+  s.className = 'success show';
+  document.getElementById('succ-ref').textContent = refId + ' · ' + new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+  const nowRow = document.querySelector('#success .sc-row span:last-child');
+  if (nowRow) nowRow.textContent = payload.isCapex
+    ? 'Your manager has been sent an approval request. Email your completed CapEx Excel to ' + payload.manager.email + ' so they can review it before approving.'
+    : 'Your manager has been sent an approval request by email. You will be notified once they respond.';
+  const pb = payload.purchaser.name, pth = payload.lineThreshold;
+  let nextTxt = `Once the manager approves, ${pb} creates the PO in the ERP.`;
+  if (payload.needsExtraApproval && payload.approvalRoute === 'ticket_customer') nextTxt = `Manager approves → Approval ticket raised with ${payload.accountLabel} for lines ≥$${pth} → ${pb} creates PO.`;
+  else if (payload.needsExtraApproval) nextTxt = `Manager approves → Sr. Director notified for lines ≥$${pth} → ${pb} creates PO.`;
+  if (payload.isCapex) nextTxt = `Manager approves → Finance confirms CapEx classification → ${pb} creates PO.`;
+  document.getElementById('sc-row-2').querySelector('span:last-child').textContent = nextTxt;
+  setTxt('sc-row-4-txt', `${pb} releases the PO to the vendor once all approvals are complete.`);
+  const capexBanner = document.getElementById('capex-email-banner');
+  if (payload.isCapex) {
+    capexBanner.style.display = 'block';
+    setTxt('capex-banner-txt', `Your PR has been submitted. You must now email your completed CapEx Excel template to ${pb}. No PO can be raised until it is received.`);
+    const subject = encodeURIComponent('[CAPEX] ' + payload.refId + ' — CapEx Excel — ' + payload.requester.name);
+    const body = encodeURIComponent('Hi ' + pb.split(' ')[0] + ',\n\nPlease find attached the completed CapEx Excel for PR ' + payload.refId + '.\n\nAccount: ' + payload.accountLabel + '\nRequester: ' + payload.requester.name + '\nProgram: ' + (payload.program || '—') + '\nTotal Value: $' + payload.totalValue.toFixed(2) + '\n\nKindly review and proceed.\n\nThank you.');
+    document.getElementById('capex-email-btn').onclick = function() {
+      toast('Demo — in production this opens an email to the buyer to attach the CapEx Excel.', 'info');
+    };
+  } else {
+    capexBanner.style.display = 'none';
+  }
+  btn.textContent = 'Confirm & Submit ↗'; btn.disabled = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function startNew() { localStorage.removeItem(DRAFT_KEY); window.location.reload(); }
+function clearForm() {
+  if (!confirm('Clear all form data? This cannot be undone.')) return;
+  localStorage.removeItem(DRAFT_KEY);
+  window.location.reload();
+}
+
+// ── Toast ──
+function toast(msg, type='info') {
+  const wrap = document.getElementById('toast-wrap');
+  const el = document.createElement('div');
+  el.className = `toast t-${type}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 400); }, 2800);
+}
+</script>
+</body>
+</html>
